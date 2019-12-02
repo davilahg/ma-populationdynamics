@@ -34,6 +34,7 @@ library(gridExtra)
  max.lh1 <- max(s.db$ln.h1, na.rm = TRUE)+0.0001
  max.lh2 <- max(s.db$ln.h2, na.rm = TRUE)+0.0001
  E.pred <- seq(min(min.lh1, min.lh2), max(max.lh1, max.lh2), length.out = M+1)
+ h <- E.pred[2]-E.pred[1]
  X.pred <- (E.pred[2:(M+1)]+E.pred[1:M])/2
  t1.pred <- rep(0, length.out = M)
  sM <- M/m
@@ -86,11 +87,90 @@ library(gridExtra)
 	gam.f4 <- gam(f4.a~s(x, k = 3), family = betar(link = "logit"))
  }
 }
-# make matrix
+# discretizing vital rates functions
 {
-
+ # g array
+ GGG <- matrix(NA, ncol = Age.mature, nrow = M)
+ for (a in 1:Age.mature)
+  GGG[, a] <- predict(lmm.g, newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), type = "response", re.form = NA)
+ MUG <- matrix(NA, ncol = Age.mature, nrow = m)
+ for (a in 1:Age.mature) {
+  init.g <- 1
+  for (i in 1:m) {
+     MUG[i, a] <- mean(GGG[init.g:(init.g+sM-1), a])
+   init.g <- init.g + sM
+  }
+ }
+ sdg <- sigma(lmm.g)
+ G <- array(NA, dim = c(Age.mature, m, m))
+ for (a in 1:Age.mature) {
+  for (i in 1:m) {
+   G[a, 1, i] <- pnorm(e.pred[2], MUG[i, a], sdg)
+   for (j in 2:(m-1))
+    G[a, j, i] <- pnorm(e.pred[j+1], MUG[i, a], sdg) - pnorm(e.pred[j], MUG[i, a], sdg)
+   G[a, m, i] <- 1-pnorm(e.pred[m], MUG[i, a], sdg)
+  }
+ } 
+ # s matrix
+ SSS <- matrix(NA, ncol = Age.mature, nrow = M)
+ for (a in 1:Age.mature)
+  SSS[ ,a] <- predict(glmm.s, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+ MUS <- matrix(NA, ncol = Age.mature, nrow = m)
+ for (a in 1:(Age.mature)) {
+  init.s <- 1
+  for (i in 1:m) {
+     MUS[i, a] <- mean(SSS[init.s:(init.s+sM-1), a])
+     init.s <- init.s + sM
+  }
+ }
+ # f1 matrix
+ FF1 <- matrix (NA, nrow = M, ncol = Age.mature)
+ for (a in 1:Age.mature)
+  FF1[ ,a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+ MUF1 <- matrix(NA, ncol = Age.mature, nrow = m)
+ for (a in 1:Age.mature) {
+    init.f1 <- 1
+    for (i in 1:m) {
+     MUF1[i, a] <- mean(FF1[init.f1:(init.f1+sM-1), a])
+     init.f1 <- init.f1 + sM
+  }
+ }
+ # f2 matrix
+ FF2 <- matrix (NA, nrow = M, ncol = Age.mature)
+ for (a in 1:Age.mature)
+  FF2[ ,a] <- predict(gam.f2$gam, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+ MUF2 <- matrix(NA, ncol = Age.mature, nrow = m)
+ for (a in 1:Age.mature) {
+    init.f2 <- 1
+    for (i in 1:m) {
+     MUF2[i, a] <- mean(FF2[init.f2:(init.f2+sM-1), a])
+     init.f2 <- init.f2 + sM
+  }
+ }
+ # f3 matrix
+ FF3 <- matrix (NA, nrow = M, ncol = Age.mature)
+ for (a in 1:Age.mature)
+  FF3[ ,a] <- predict(glmm.f3, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+ MUF3 <- matrix(NA, ncol = Age.mature, nrow = m)
+ for (a in 1:Age.mature) {
+    init.f3 <- 1
+    for (i in 1:m) {
+     MUF3[i, a] <- mean(FF3[init.f3:(init.f3+sM-1), a])
+     init.f3 <- init.f3 + sM
+  }
+ }
+ # f5 vector
+ ff5 <- den.f5$y*h
+ FF5 <- matrix(NA, nrow = m, ncol = m)
+ for (i in 1:m) {
+  FF5[i,] <- ff5
+ }
 }
-	
+
+
+
+
+
 # plots F5
   f5.p.df <- data.frame(offspring$Age, offspring$h1)
   f5.p.gg <- ggplot(f5.p.df, aes(x=offspring.h1)) + 
@@ -111,6 +191,13 @@ library(gridExtra)
     lines(f4.pred, predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response"), col = "red")
  	#dev.off()
 }
+
+# CONSTRUCCIÓN DE MATRICES
+
+
+
+
+
 
 # CONSTRUCCIÓN DE MATRICES
 {
