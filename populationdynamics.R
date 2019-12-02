@@ -166,6 +166,26 @@ library(gridExtra)
   FF5[i,] <- ff5
  }
 }
+# creating kernel
+{
+ k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+ s.i.a <- S
+ f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+ for (a in 1:Age.mature)
+  f.i.a[, a] <- F1[, a]*F2[, a]*F3[, a]*F4[a]
+ for (a in 1:Age.mature)
+  for (i in 1:m) {
+   s.i.j.a[a, i, ] <- s.i.a[i, a]
+   g.i.j.a[a, , ] <- G[a, , ]
+   p.i.j.a[a, i, ] <- p.i <- s.i.j.a[a, i, ]*G[a, i, ]
+   f.i.j.a[a, i, ] <- f.i.a[i, a]
+   F5.i.j.a[a, i, ] <- F5
+   f.i <- f.i.a[i, a]*F5
+   f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
+   k.i.j.a[a, i, ] <- p.i+f.i
+  }
+}
+
 
 
 
@@ -209,26 +229,6 @@ library(gridExtra)
  F3 <- MUF3 <- Mlist$MUF3
  F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
  F5 <- den.f5$y
-}
-
-# CONSTRUCCIÓN DEL KERNEL
-{
- k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
- s.i.a <- S
- f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
- for (a in 1:Age.mature)
-  f.i.a[, a] <- F1[, a]*F2[, a]*F3[, a]*F4[a]
- for (a in 1:Age.mature)
-  for (i in 1:m) {
-   s.i.j.a[a, i, ] <- s.i.a[i, a]
-   g.i.j.a[a, , ] <- G[a, , ]
-   p.i.j.a[a, i, ] <- p.i <- s.i.j.a[a, i, ]*G[a, i, ]
-   f.i.j.a[a, i, ] <- f.i.a[i, a]
-   F5.i.j.a[a, i, ] <- F5
-   f.i <- f.i.a[i, a]*F5
-   f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
-   k.i.j.a[a, i, ] <- p.i+f.i
-  }
 }
 
 # LAMBDAS (Sin migración)
