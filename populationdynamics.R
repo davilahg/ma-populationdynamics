@@ -45,19 +45,16 @@ library(gridExtra)
 
 # modelling vital rates
 {
- glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), newSurvival, binomial) # survival: s
+ glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), s.db, binomial) # survival: s
  lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), g.db) # growth: g
- glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), Mim.rep, binomial) # reproduction probability: f1
- gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = Mim.frut) # fruit number per individual: f2
- glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), Seeds, poisson) # seed number per fruit: f3
+ glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), f1.db, binomial) # reproduction probability: f1
+ gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = f2.db) # fruit number per individual: f2
+ glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), f3.db, poisson) # seed number per fruit: f3
+ den.f5 <- density(x = f5.db$h1, n = m, na.rm = TRUE, from = min(f5.db$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
+ den.f5$y <- den.f5$y/sum(den.f5$y)
+ 
 
-	##f5(y) Newborn size
- 	den.f5 <- density(x = offspring$h1, n = m, na.rm = TRUE, from = min(offspring$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
- 	den.f5$y <- den.f5$y/sum(den.f5$y)
- 	png(filename = "fc5.png", width = 1000, height = 700, pointsize = 20)
- 	plot(den.f5, xlab = "Tamaño de los reclutas (m)", ylab = "Probabilidad", main = "Tamaño de los descendientes")
- 	dev.off()
-
+# plots
   f5.p.df <- data.frame(offspring$Age, offspring$h1)
   f5.p.gg <- ggplot(f5.p.df, aes(x=offspring.h1)) + 
     geom_histogram(aes(y=..density..), colour="black", fill="white")+
@@ -70,7 +67,7 @@ library(gridExtra)
 
 
  	##f4(t) Probabilidad de establecimiento
- 	und.ages <- und.S$Age <- as.factor(as.character(und.S$Age))
+ 	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age))
  	stb.n <- as.data.frame(table(offspring$Age))
  	names(stb.n) <- c("Age", "SNB") # SNB = established newborns
  	und.ages <- as.numeric(levels(und.ages))
