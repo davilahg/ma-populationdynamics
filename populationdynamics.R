@@ -2,7 +2,7 @@
 #
 dir <- getwd()
 setwd(dir) # setting work directory
-#load requiered libraries
+# load requiered libraries
 library(AICcmodavg)
 library(betareg)
 library(EnvStats)
@@ -13,66 +13,26 @@ library(mgcv)
 library(reshape2)
 library(plotly)
 library(gridExtra)
-#
-Age.mature <- 100
-# Read databases
+# read data
 {
-	s.db <- read.csv("./Data/survival.csv") # survival with estimated h1
+  s.db <- read.csv("./Data/survival.csv") # survival with estimated h1
   s1.db <- read.csv("./Data/survival-1.csv") # survival without estimated h1
-	g.db <- read.csv("./Data/growth.csv")
+  g.db <- read.csv("./Data/growth.csv")
   f1.db <- read.csv("./Data/reproduction-probability.csv")
   f2.db <- read.csv("./Data/reproduction-fruits.csv")
   f3.db <- read.csv("./Data/reproduction-seeds.csv")
-  f4.db <- read.csv("./Data/")
-  f5.db <- read.csv("./Data/offspring.csv")
+  f4.db <- read.csv("./Data/establishment.csv")
+  f5.db <- read.csv("./Data/understory.csv")
  }
-# merge understory + canopy df
+# definitions
 {
- und.S <- read.csv("./Datos/und.S.csv") # Tiene sólamente las variables usables y tiene los individuos de edad 
- old.und <- read.csv("./Datos/Sotobosque.csv")
- understory1 <- read.csv("./Datos/Sotobosque1.csv")
- # Crear bases de datos específicas
- und.g <- subset(und.S, sup == 1)
- # Unir la base de datos de dosel y la de sotobosque
- Survival <- rbind(can.s, und.S)
- newSurvival <- read.csv("./Datos/nSur.csv")
- Growth <- rbind(can.g, und.g)
- #conservar a los individuos en su primera aparición
- #sólaente es útil para f4
- #understory$plot <- as.factor(as.character(understory$plot))
- #undtoa <- subset(understory, plot == 8 | plot == 8.1)
- #undtoa <- subset(undtoa, Census < 2010)
- #undtoa <- droplevels(undtoa)
- #und <- subset(understory, plot != 8 & plot != 8.1)
- #und <- droplevels(und)
- #understory <- rbind(und, undtoa)
- understory1 <- transform(understory1, id = as.factor(paste0("p", Plot, "i", Etiqueta)), ln.h1 = log(Altura))
- understory1 <- transform(understory1,  h2 = rep(NA, nrow(understory1)))
-}
-
-# CONSTRUIR OFFSPRING PARA ESTABLECIMIENTO
-{
- oldDB <- und.S
- oldDB <- transform(oldDB, h1 = h2, ln.h1 = ln.h2) #estan recorridos porque tienen el espacio para calcular el primer tama;o, pero aqui no se necesita porque no es necesario tomar la supervivencia
- offspring <- as.data.frame(matrix(NA, nrow = 0, ncol = 0))
- for (i in levels(oldDB$id)) {
-	 off.id <- subset(oldDB, id == i)
-	 off.id <- off.id[(order(off.id$Age)), ]
-	 off.id <- off.id[1, ]
-	 offspring <- rbind(offspring, as.data.frame(off.id))
- }
- offspring <- offspring[!is.na(offspring$h1),]
- #plot(offspring$h1, offspring$Age)
-}
-
-# DEFINICIONES NECESARIAS
-{
+ Age.mature <- 100
  m <- 100 # small-matrix dimension
  M <- 200000 # big-matrix dimension
- min.lh1 <- min(newSurvival$ln.h1, na.rm = TRUE)-0.0001
- min.lh2 <- min(newSurvival$ln.h1, na.rm = TRUE)-0.0001
- max.lh1 <- max(newSurvival$ln.h1, na.rm = TRUE)+0.0001
- max.lh2 <- max(newSurvival$ln.h2, na.rm = TRUE)+0.0001
+ min.lh1 <- min(s.db$ln.h1, na.rm = TRUE)-0.0001
+ min.lh2 <- min(s.db$ln.h1, na.rm = TRUE)-0.0001
+ max.lh1 <- max(s.db$ln.h1, na.rm = TRUE)+0.0001
+ max.lh2 <- max(s.db$ln.h2, na.rm = TRUE)+0.0001
  E.pred <- seq(min(min.lh1, min.lh2), max(max.lh1, max.lh2), length.out = M+1)
  X.pred <- (E.pred[2:(M+1)]+E.pred[1:M])/2
  t1.pred <- rep(0, length.out = M)
@@ -80,7 +40,7 @@ Age.mature <- 100
  e.pred <- seq(min(X.pred), max(X.pred), length.out = m+1)
  x.pred <- (e.pred[2:(m+1)]+e.pred[1:m])/2
  f4.pred <- Age.pred <- 1:Age.mature
- nplot <- nlevels(Survival$PLOT)
+ nplot <- nlevels(s.db$PLOT)
 }
 
 # NUEVOS MODELOS
