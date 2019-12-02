@@ -42,7 +42,6 @@ library(gridExtra)
  f4.pred <- Age.pred <- 1:Age.mature
  nplot <- nlevels(s.db$PLOT)
 }
-
 # modelling vital rates
 {
  glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), s.db, binomial) # survival: s
@@ -52,9 +51,47 @@ library(gridExtra)
  glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), f3.db, poisson) # seed number per fruit: f3
  den.f5 <- density(x = f5.db$h1, n = m, na.rm = TRUE, from = min(f5.db$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
  den.f5$y <- den.f5$y/sum(den.f5$y)
- 
+ # gam.f4
+ {
+	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # get ages with register in understory data
+	stb.n <- as.data.frame(table(f4.db$Age)) # get number of recruits per year
+	names(stb.n) <- c("Age", "SNB") # SNB = recruits
+	und.ages <- as.numeric(levels(und.ages))
+	new.stb.n <- data.frame(Age = und.ages[order(und.ages)], SNB = rep(NA, length(und.ages))) # create new dataframe
+	for (i in 1:nrow(stb.n)) { # order dataframe
+		if (stb.n$Age[i] == new.stb.n$Age[which(new.stb.n$Age == stb.n$Age[i])]) {
+			new.stb.n$SNB[which(new.stb.n$Age == stb.n$Age[i])] <- stb.n$SNB[i]
+		}
+	}
+	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # setting 0 to ages with register but no recruits
+	stb.n <- new.stb.n
+	stb.n <- transform(stb.n, Age = as.numeric(as.character(Age)))
+	n.ages <- stb.n$Age
+	f4.a <- rep(NA, length(n.ages)) # create new dataframe for establishment probability
+	for (a in n.ages) {
+		stb.a <- subset(s.db, Age == a) # create new data for each year
+		n.str.a <- as.data.frame(cbind(x.pred, hist(log(as.numeric(as.character(stb.a$h1))), breaks = e.pred, plot = FALSE)$counts))
+		names(n.str.a) <- c("ln.h1", "n")
+		n.vec.a <- n.str.a$ln.h1
+		pred.f1.a <- predict(glmm.f1, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
+		pred.f2.a <- predict(gam.f2$gam, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
+		pred.f3.a <- predict(glmm.f3, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
+		pred.f.a <- pred.f1.a*pred.f2.a*pred.f3.a # predicting and multiplying reproduction functions
+		new.n.a <- sum(pred.f.a) # seed number produced in t-1
+		stb.n.a <- stb.n$SNB[which(stb.n$Age == a)] # observed recruits number
+		f4.a[which(stb.n$Age == a)] <- stb.n.a/new.n.a # establishment probability from t-1 to t
+		}
+	f4.a[which(f4.a == 0)] <- 0.00000001 # change 0 to perform beta regression
+	x <- n.ages
+	gam.f4 <- gam(f4.a~s(x, k = 3), family = betar(link = "logit"))
+ }
+}
+# make matrix
+{
 
-# plots
+}
+	
+# plots F5
   f5.p.df <- data.frame(offspring$Age, offspring$h1)
   f5.p.gg <- ggplot(f5.p.df, aes(x=offspring.h1)) + 
     geom_histogram(aes(y=..density..), colour="black", fill="white")+
@@ -64,44 +101,8 @@ library(gridExtra)
     ylab(expression("Probabilidad"))
    # ggsave("/Users/gdh/Documents/MEGA/Tesis/Gráficas/fc5-gg.png", f5.p.gg, device = "png", width = 10, height = 7, units = "in", dpi = 180*2)
 
-
-
- 	##f4(t) Probabilidad de establecimiento
- 	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # get ages with register in understory data
- 	stb.n <- as.data.frame(table(f4.db$Age)) # get number of recruits per year
- 	names(stb.n) <- c("Age", "SNB") # SNB = recruits
- 	und.ages <- as.numeric(levels(und.ages))
- 	new.stb.n <- data.frame(Age = und.ages[order(und.ages)], SNB = rep(NA, length(und.ages))) # create new dataframe
- 	for (i in 1:nrow(stb.n)) { # order dataframe
- 		if (stb.n$Age[i] == new.stb.n$Age[which(new.stb.n$Age == stb.n$Age[i])]) {
- 			new.stb.n$SNB[which(new.stb.n$Age == stb.n$Age[i])] <- stb.n$SNB[i]
- 		}
- 	}
- 	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # setting 0 to ages with register but no recruits
- 	stb.n <- new.stb.n
- 	stb.n <- transform(stb.n, Age = as.numeric(as.character(Age)))
- 	n.ages <- stb.n$Age
- 	f4.a <- rep(NA, length(n.ages)) # create new dataframe for establishment probability
- 	for (a in n.ages) {
-   		stb.a <- subset(s.db, Age == a) # create new data for each year
-   		n.str.a <- as.data.frame(cbind(x.pred, hist(log(as.numeric(as.character(stb.a$h1))), breaks = e.pred, plot = FALSE)$counts))
-   		names(n.str.a) <- c("ln.h1", "n")
-   		n.vec.a <- n.str.a$ln.h1
-     		pred.f1.a <- predict(glmm.f1, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
-   		pred.f2.a <- predict(gam.f2$gam, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
-   		pred.f3.a <- predict(glmm.f3, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
-   		pred.f.a <- pred.f1.a*pred.f2.a*pred.f3.a # predicting and multiplying reproduction functions
-   		new.n.a <- sum(pred.f.a) # seed number produced in t-1
-   		stb.n.a <- stb.n$SNB[which(stb.n$Age == a)] # observed recruits number
-   		f4.a[which(stb.n$Age == a)] <- stb.n.a/new.n.a # establishment probability from t-1 to t
- 		}
- 	f4.a[which(f4.a == 0)] <- 0.00000001 # cambiar los 0s para que corra la regresion beta
- 	#GAMs #establishment probability over time
- 	x <- n.ages
- 	#gam.f4 <- gam(f4.a~s(x, k = 3), family = gaussian(log))
-    #glm.f4 <- betareg(f4.a~x)
-    gam.f4 <- gam(f4.a~s(x, k = 3), family = betar(link = "logit"))
- 	#AICc(m3.2)
+	#plots F4
+	
  	#png("f4Plot.png", width = 900, height = 600, units = "px", pointsize = 20)
  	f4.pred <- seq(0, Age.mature)
  	plot(x, f4.a, xlim = c(0, Age.mature), xlab = "Edad sucesional (años)", ylab = "Probabilidad de establecimiento")
