@@ -1,5 +1,5 @@
 # Population dynamics of Mimosa acantholoba
-#
+# open r terminal in desired work directory or substitute dir by directory path
 dir <- getwd()
 setwd(dir) # setting work directory
 # load requiered libraries
@@ -43,21 +43,13 @@ library(gridExtra)
  nplot <- nlevels(s.db$PLOT)
 }
 
-# NUEVOS MODELOS
+# modelling vital rates
 {
-  #lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), Growth) ## Crecimiento
-	#glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), newSurvival, binomial) #Supervivencia
-	#glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), Mim.rep, binomial) ## Prob. de reproducirse
-	#gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = Mim.frut) ## Núm. de frutos por individuo
-	#glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), Seeds, poisson) ## Núm. de semillas por fruto
-	#ml <- list(lmm.g = lmm.g, glmm.s = glmm.s, glmm.f1 = glmm.f1, gam.f2 = gam.f2, glmm.f3 = glmm.f3)
-	#save(ml, file = "model-list-0.rda")
-	load("model-list-0.rda")
-	lmm.g <- ml$lmm.g
-	glmm.s <- ml$glmm.s
-	glmm.f1 <- ml$glmm.f1
-	gam.f2 <- ml$gam.f2
-	glmm.f3 <- ml$glmm.f3
+ glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), newSurvival, binomial) # survival: s
+ lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), g.db) # growth: g
+ glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), Mim.rep, binomial) # reproduction probability: f1
+ gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = Mim.frut) # fruit number per individual: f2
+ glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), Seeds, poisson) # seed number per fruit: f3
 
 	##f5(y) Newborn size
  	den.f5 <- density(x = offspring$h1, n = m, na.rm = TRUE, from = min(offspring$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
