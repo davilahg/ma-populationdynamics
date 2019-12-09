@@ -343,14 +343,15 @@ library(gridExtra)
 # esto ya no está limpio
 
 # plots F5
-  f5.p.df <- data.frame(offspring$Age, offspring$h1)
-  f5.p.gg <- ggplot(f5.p.df, aes(x=offspring.h1)) + 
+  f5.p.df <- data.frame(f5.db$Age, f5.db$h1)
+  f5.p.gg <- ggplot(f5.p.df, aes(x=f5.db.h1)) + 
+    theme_minimal() +
     geom_histogram(aes(y=..density..), colour="black", fill="white")+
     geom_density(alpha=.2, fill="#FF6666") +
     theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
-    xlab(expression(paste("Altura de reclutas (m)"))) +
-    ylab(expression("Probabilidad"))
-   # ggsave("/Users/gdh/Documents/MEGA/Tesis/Gráficas/fc5-gg.png", f5.p.gg, device = "png", width = 10, height = 7, units = "in", dpi = 180*2)
+    xlab(expression(paste("Recruits height (m)"))) +
+    ylab(expression("Probability"))
+   #ggsave("art-f5.png", f5.p.gg, device = "png", width = 10, height = 7, units = "in", dpi = 180*2)
 
 	#plots F4
 	
