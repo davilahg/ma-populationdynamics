@@ -166,7 +166,7 @@ library(gridExtra)
  # f4 vector
  F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
  # f5 vector
- F5 <- h*den.f5$y
+ F5 <- den.f5$y
  }
 }
 # creating kernel
@@ -205,6 +205,52 @@ library(gridExtra)
 		 }
 		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
 } 
+
+# Lambda por parcela (OBSERVADA)
+ {   
+     nplot <- nlevels(Survival$PLOT)
+     Survival <- transform(Survival, PLOT = as.factor(as.character(plot)))
+ 	   plot.lam.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(Survival$PLOT)), NA))
+ 	   names(plot.lam.list) <- 1:nplot
+ 	   for (i in levels(Survival$PLOT)) {
+  	 	 Mim.s.p <- subset(Survival, PLOT == i)
+         if (Mim.s.p$PLOT[1] != 5) {
+          if (all(!is.na(Mim.s.p$Age))) {
+             lam.list <- c()
+             min.a <- min(Mim.s.p$Age, na.rm = TRUE)
+             max.a <- max(Mim.s.p$Age, na.rm = TRUE)
+             n.1.i <- which(Mim.s.p$Age == min.a)
+             n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))]
+             init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts
+             for (a in ((min.a+1):max.a)) {
+                  n.a.db <- droplevels(subset(Mim.s.p, Age == a))
+                  n.a.v.i <- nlevels(n.a.db$id)
+                  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)
+                  init.n.a.v.i <- n.a.v.i
+                  lam.list <- c(lam.list, lam.a.i)
+              }
+             plot.lam.list[(min.a+1):max.a, as.numeric(i)] <- lam.list
+        }
+       }
+  	 }
+ 	   plot.lam.plot <- list(NA)
+ 	   for (i in 1:nplot) {
+      if (i != 5) {
+        plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2))
+        names(plot.l.i) <- c("Age", "lambda")
+        plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))
+        plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)]
+        plot.lam.plot[[i]] <- plot.l.i 
+      }
+      else if (i == 5) {
+        plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))
+        names(plot.l.5) <- c("Age", "lambda")
+        plot.l.5$Age[1] <- Age.mature
+        plot.l.5$lambda[1] <- lam.mature
+        plot.lam.plot[[5]] <- plot.l.5
+      }
+ 	   }
+ }
 
 
 
