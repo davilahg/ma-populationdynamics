@@ -188,7 +188,7 @@ library(gridExtra)
    k.i.j.a[a, i, ] <- p.i+f.i
   }
 }
- # total lambda
+# total predicted lambda
 {
 	lam.list <- c()
 	n.0 <- which(s.db$Age == 0)
@@ -205,53 +205,129 @@ library(gridExtra)
 		 }
 		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
 } 
-
-# Lambda por parcela (OBSERVADA)
- {   
-     nplot <- nlevels(Survival$PLOT)
-     Survival <- transform(Survival, PLOT = as.factor(as.character(plot)))
- 	   plot.lam.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(Survival$PLOT)), NA))
+# total observed lambda
+{
+   ob.lam.list <- c()
+ 	   N.0 <- subset(s1.db, Age == 0)
+ 	   N.0 <- subset(N.0, sup == 1)
+ 	   N.init <- nrow(N.0)
+ 	   N.list <- c(N.init)
+ 	   for (i in 1:Age.mature) {
+ 		   ns.i <- subset(s1.db, Age == i)
+ 		   ns.i <- subset(ns.i, sup == 1)
+ 		   N.ns.i <- nrow(ns.i)
+ 		   if (N.ns.i != 0 & N.init != 0) {
+ 			   lambda <- N.ns.i/N.init
+ 			 } else {
+ 				 lambda <- NA
+ 			 }
+ 		   N.init <- N.ns.i
+ 		   N.list <- c(N.list, N.init)
+ 		   ob.lam.list <- c(ob.lam.list, lambda)
+ 	    }
+     ns.mature <- subset(s1.db, Age == Age.mature) # avoid population overestimating due to individuals repeat at Age.mature
+     ns.mature <- subset(ns.mature, sup == 1)
+     ns.mature <- transform(ns.mature, Census = as.factor(as.character(Census)))
+     ns.mature <- droplevels(ns.mature)
+     N.mat.list <- c()
+     for (i in levels(ns.mature$Census)) {
+     	ns.mat.yr <- subset(ns.mature, Census == i)
+     	ns.mat.N <- nrow(ns.mat.yr)
+     	N.mat.list <- c(N.mat.list, ns.mat.N)
+     }
+     lam.m.list <- c()
+     init.n.mat <- N.mat.list[1]
+     for (j in 2:length(N.mat.list)) {
+     	lam.j <- N.mat.list[j]/init.n.mat
+     	lam.m.list <- c(lam.m.list,lam.j)
+     	init.n.mat <- N.mat.list[j]
+     }
+     lam.mature <- geoMean(lam.m.list)
+ 	   ob.lam.list <- c(ob.lam.list, lam.mature)
+ 	   ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature+1)) # creo base de datos para graficar
+ 	   names(ob.lam.df) <- c("Age", "ob.lambda")
+ 	   ob.lam.df$Age <- 1:(Age.mature+1)
+ 	   ob.lam.df$ob.lambda[1:(Age.mature+1)] <- ob.lam.list
+     # create lambda data frame for plotting
+     lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
+}
+# observed lambda by plot
+{   
+           nplot <- nlevels(s1.db$PLOT)
+           s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))
+     	   plot.lam.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(s1.db$PLOT)), NA))
  	   names(plot.lam.list) <- 1:nplot
- 	   for (i in levels(Survival$PLOT)) {
-  	 	 Mim.s.p <- subset(Survival, PLOT == i)
-         if (Mim.s.p$PLOT[1] != 5) {
-          if (all(!is.na(Mim.s.p$Age))) {
-             lam.list <- c()
-             min.a <- min(Mim.s.p$Age, na.rm = TRUE)
-             max.a <- max(Mim.s.p$Age, na.rm = TRUE)
-             n.1.i <- which(Mim.s.p$Age == min.a)
-             n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))]
-             init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts
-             for (a in ((min.a+1):max.a)) {
-                  n.a.db <- droplevels(subset(Mim.s.p, Age == a))
-                  n.a.v.i <- nlevels(n.a.db$id)
-                  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)
-                  init.n.a.v.i <- n.a.v.i
-                  lam.list <- c(lam.list, lam.a.i)
-              }
-             plot.lam.list[(min.a+1):max.a, as.numeric(i)] <- lam.list
-        }
-       }
-  	 }
+ 	   for (i in levels(s1.db$PLOT)) {
+  	 	 Mim.s.p <- subset(s1.db, PLOT == i)
+		 if (Mim.s.p$PLOT[1] != 5) {
+		  if (all(!is.na(Mim.s.p$Age))) {
+		     lam.list <- c()
+		     min.a <- min(Mim.s.p$Age, na.rm = TRUE)
+		     max.a <- max(Mim.s.p$Age, na.rm = TRUE)
+		     n.1.i <- which(Mim.s.p$Age == min.a)
+		     n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))]
+		     init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts
+		     for (a in ((min.a+1):max.a)) {
+			  n.a.db <- droplevels(subset(Mim.s.p, Age == a))
+			  n.a.v.i <- nlevels(n.a.db$id)
+			  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)
+			  init.n.a.v.i <- n.a.v.i
+			  lam.list <- c(lam.list, lam.a.i)
+		      }
+		     plot.lam.list[(min.a+1):max.a, as.numeric(i)] <- lam.list
+		}
+	       }
+	   }
  	   plot.lam.plot <- list(NA)
  	   for (i in 1:nplot) {
-      if (i != 5) {
-        plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2))
-        names(plot.l.i) <- c("Age", "lambda")
-        plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))
-        plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)]
-        plot.lam.plot[[i]] <- plot.l.i 
-      }
-      else if (i == 5) {
-        plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))
-        names(plot.l.5) <- c("Age", "lambda")
-        plot.l.5$Age[1] <- Age.mature
-        plot.l.5$lambda[1] <- lam.mature
-        plot.lam.plot[[5]] <- plot.l.5
-      }
- 	   }
+      		if (i != 5) {
+        		plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2))
+        		names(plot.l.i) <- c("Age", "lambda")
+       			plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))
+        		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)]
+        		plot.lam.plot[[i]] <- plot.l.i 
+      			}
+      		else if (i == 5) {
+        		plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))
+        		names(plot.l.5) <- c("Age", "lambda")
+        		plot.l.5$Age[1] <- Age.mature
+        		plot.l.5$lambda[1] <- lam.mature
+        		plot.lam.plot[[5]] <- plot.l.5
+      			}
+ 	   	       }
  }
-
+# plots
+# total, no migration
+{
+     lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
+     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
+     	scale_fill_discrete(guide=FALSE) +
+     	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
+     	lambda.edad + 
+     	theme_minimal() +
+     	theme(legend.position = "none")
+     	lambda.edad
+     #ggsave("lambda-edad.png", lambda.edad, device = "png", width = 9, height = 7, units = "in", dpi = 180*2)
+}
+# by plot, no migration
+ {
+ 	 lambda.df.2 <- transform(lambda.df)
+ 	 p.lam.p.2 <- as.data.frame(matrix(nrow = 0, ncol = 2))
+ 	 names(p.lam.p.2) <- c("Age", "lambda")
+ 	 for (i in 1:nplot) {
+ 		 p.lam.p.i <-transform(plot.lam.plot[[i]])
+ 		 p.lam.p.2  <- rbind(p.lam.p.2, p.lam.p.i)
+ 	 }
+ 	 p.lam.ob <- ggplot(p.lam.p.2, aes(x = Age, y = lambda, alpha = 1/2), show.legend = FALSE) + 
+ 	 theme_minimal() +
+ 	 geom_line(size = 1) + 
+     	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
+ 	 geom_line(data = lambda.df.2, aes(x = Age, y = lambda), col = "red", size = 1, alpha = 1/3, show.legend = FALSE) +
+ 	 labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
+ 	 scale_alpha(guide = "none")
+ 	 p.lam.ob
+ 	 #ggsave("no-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
+ }
 
 
 
