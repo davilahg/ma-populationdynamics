@@ -85,7 +85,6 @@ library(gridExtra)
 	f4.a[which(f4.a == 0)] <- 0.00000001 # change 0 to perform beta regression
 	x <- n.ages
 	gam.f4 <- gam(f4.a~s(x, k = 3), family = betar(link = "logit"))
- }
 }
 # discretizing vital rates functions
 {
