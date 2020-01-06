@@ -166,8 +166,8 @@ library(gridExtra)
  F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
  # f5 vector
  F5 <- den.f5$y
- }
 }
+
 # creating kernel
 {
  k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
@@ -190,16 +190,16 @@ library(gridExtra)
 # total predicted lambda
 {
 	lam.list <- c()
-	n.0 <- which(s.db$Age == 0)
-	n.0.h <- log(s.db[n.0,]$h2) # since this dataframe has a new estimated h1, h2 is the observed first height for the first year
-	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-	init.n.a.v <- n.0.v
-	n.list <- c(sum(init.n.a.v))
+	n.0 <- which(s.db$Age == 0) # get trees in first year (row number)
+	n.0.h <- log(s.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
+	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
+	init.n.a.v <- n.0.v # rename vector
+	n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
 	for (a in 1:Age.mature) {
-		 n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-		 lam.a <- sum(n.a.v)/sum(init.n.a.v)
-		 init.n.a.v <- n.a.v
-		 n.list <- c(n.list, sum(n.a.v))
+		 n.a.v <- k.i.j.a[a,,]%*%init.n.a.v # get kernel for first value (year)
+		 lam.a <- sum(n.a.v)/sum(init.n.a.v) # get lambda for first year
+		 init.n.a.v <- n.a.v # rename initial vector to start again
+		 n.list <- c(n.list, sum(n.a.v)) # add 
 		 lam.list <- c(lam.list, lam.a)
 		 }
 		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
@@ -298,7 +298,7 @@ library(gridExtra)
 # plots
 # total, no migration
 {
-     lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
+     lambda.df <- as.d}ata.frame(list(lambda = lam.list, Age = 1:Age.mature))
      lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
      	scale_fill_discrete(guide=FALSE) +
      	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
