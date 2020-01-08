@@ -199,99 +199,98 @@ library(gridExtra)
 		 n.a.v <- k.i.j.a[a,,]%*%init.n.a.v # get kernel for first value (year)
 		 lam.a <- sum(n.a.v)/sum(init.n.a.v) # get lambda for first year
 		 init.n.a.v <- n.a.v # rename initial vector to start again
-		 n.list <- c(n.list, sum(n.a.v)) # add 
-		 lam.list <- c(lam.list, lam.a)
+		 n.list <- c(n.list, sum(n.a.v)) # add next population size value to vector
+		 lam.list <- c(lam.list, lam.a) # add next lambda value to vector
 		 }
 		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
 } 
 # total observed lambda
 {
-   ob.lam.list <- c()
- 	   N.0 <- subset(s1.db, Age == 0)
- 	   N.0 <- subset(N.0, sup == 1)
- 	   N.init <- nrow(N.0)
- 	   N.list <- c(N.init)
- 	   for (i in 1:Age.mature) {
- 		   ns.i <- subset(s1.db, Age == i)
- 		   ns.i <- subset(ns.i, sup == 1)
- 		   N.ns.i <- nrow(ns.i)
- 		   if (N.ns.i != 0 & N.init != 0) {
- 			   lambda <- N.ns.i/N.init
- 			 } else {
- 				 lambda <- NA
+   	   ob.lam.list <- c()				# create observed lambda vector
+ 	   N.0 <- subset(s1.db, Age == 0)		# get row number of trees in first year
+ 	   N.0 <- subset(N.0, sup == 1)			# filtering to obtain only alive trees
+ 	   N.init <- nrow(N.0)				# get number of alive trees in first year
+ 	   N.list <- c(N.init)				# create a new list of observed population sizes and setting first value
+ 	   for (i in 1:Age.mature) {			
+ 		   ns.i <- subset(s1.db, Age == i)	# create a set of trees in year a, starting from a = 1
+ 		   ns.i <- subset(ns.i, sup == 1)	# filtering to get only alive trees
+ 		   N.ns.i <- nrow(ns.i)			# counting trees
+ 		   if (N.ns.i != 0 & N.init != 0) {	# if it is not an empty vector:
+ 			   lambda <- N.ns.i/N.init	# get lambda
+ 			 } else {			# if it is:
+ 				 lambda <- NA		# set lambda to NA (avoiding to get 0 instead of NA)
  			 }
- 		   N.init <- N.ns.i
- 		   N.list <- c(N.list, N.init)
- 		   ob.lam.list <- c(ob.lam.list, lambda)
+ 		   N.init <- N.ns.i			# set a new initial population for next lambda
+ 		   N.list <- c(N.list, N.init)		# add new population size to vector
+ 		   ob.lam.list <- c(ob.lam.list, lambda)# aff new lambda to observed lambda vector
  	    }
-     ns.mature <- subset(s1.db, Age == Age.mature) # avoid population overestimating due to individuals repeat at Age.mature
-     ns.mature <- subset(ns.mature, sup == 1)
-     ns.mature <- transform(ns.mature, Census = as.factor(as.character(Census)))
-     ns.mature <- droplevels(ns.mature)
-     N.mat.list <- c()
-     for (i in levels(ns.mature$Census)) {
-     	ns.mat.yr <- subset(ns.mature, Census == i)
-     	ns.mat.N <- nrow(ns.mat.yr)
-     	N.mat.list <- c(N.mat.list, ns.mat.N)
+     ns.mature <- subset(s1.db, Age == Age.mature) 	# get mature forest subset (avoid population overestimating due to individuals repeat at Age.mature)
+     ns.mature <- subset(ns.mature, sup == 1)		# get alive trees only
+     ns.mature <- transform(ns.mature, Census = as.factor(as.character(Census))) # transform census year as factor
+     ns.mature <- droplevels(ns.mature) # drop useless levels
+     N.mat.list <- c()  # create new vector of population sizes
+     for (i in levels(ns.mature$Census)) {		# for each year in mature forest:
+     	ns.mat.yr <- subset(ns.mature, Census == i)	# get a subset of population in census year = i
+     	ns.mat.N <- nrow(ns.mat.yr)			# count trees
+     	N.mat.list <- c(N.mat.list, ns.mat.N)		# add population size to vector
      }
-     lam.m.list <- c()
-     init.n.mat <- N.mat.list[1]
-     for (j in 2:length(N.mat.list)) {
-     	lam.j <- N.mat.list[j]/init.n.mat
-     	lam.m.list <- c(lam.m.list,lam.j)
-     	init.n.mat <- N.mat.list[j]
+     lam.m.list <- c()					# create a new vector of lambdas of mature forest
+     init.n.mat <- N.mat.list[1]			# set first population size
+     for (j in 2:length(N.mat.list)) {			# for every j in population size list:
+     	lam.j <- N.mat.list[j]/init.n.mat		# get lambda
+     	lam.m.list <- c(lam.m.list,lam.j)		# add lambda to list
+     	init.n.mat <- N.mat.list[j]			# reset initial population size
      }
-     lam.mature <- geoMean(lam.m.list)
- 	   ob.lam.list <- c(ob.lam.list, lam.mature)
- 	   ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature+1)) # creo base de datos para graficar
- 	   names(ob.lam.df) <- c("Age", "ob.lambda")
- 	   ob.lam.df$Age <- 1:(Age.mature+1)
- 	   ob.lam.df$ob.lambda[1:(Age.mature+1)] <- ob.lam.list
-     # create lambda data frame for plotting
-     lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
+     lam.mature <- geoMean(lam.m.list)			# apply geometric mean to get mature forest lambda
+     ob.lam.list <- c(ob.lam.list, lam.mature)		# add observed lambda in mature forest to the whole succession list
+     ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature+1)) # create database for observed lambdas
+     names(ob.lam.df) <- c("Age", "ob.lambda")		# naming database
+     ob.lam.df$Age <- 1:(Age.mature+1)			# set age range
+     ob.lam.df$ob.lambda[1:(Age.mature+1)] <- ob.lam.list # set observed lambda value
+     lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plotting
 }
 # observed lambda by plot
 {   
-           nplot <- nlevels(s1.db$PLOT)
-           s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))
-     	   plot.lam.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(s1.db$PLOT)), NA))
- 	   names(plot.lam.list) <- 1:nplot
- 	   for (i in levels(s1.db$PLOT)) {
-  	 	 Mim.s.p <- subset(s1.db, PLOT == i)
-		 if (Mim.s.p$PLOT[1] != 5) {
-		  if (all(!is.na(Mim.s.p$Age))) {
-		     lam.list <- c()
-		     min.a <- min(Mim.s.p$Age, na.rm = TRUE)
-		     max.a <- max(Mim.s.p$Age, na.rm = TRUE)
-		     n.1.i <- which(Mim.s.p$Age == min.a)
-		     n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))]
-		     init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts
-		     for (a in ((min.a+1):max.a)) {
-			  n.a.db <- droplevels(subset(Mim.s.p, Age == a))
-			  n.a.v.i <- nlevels(n.a.db$id)
-			  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)
-			  init.n.a.v.i <- n.a.v.i
-			  lam.list <- c(lam.list, lam.a.i)
+           nplot <- nlevels(s1.db$PLOT)						# get number of plots
+           s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))	# transoform plots as factor
+     	   plot.lam.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(s1.db$PLOT)), NA)) # create new database for observed lambda list by plot
+ 	   names(plot.lam.list) <- 1:nplot					# name plot columns
+ 	   for (i in levels(s1.db$PLOT)) {					# for every plot:
+  	 	 Mim.s.p <- subset(s1.db, PLOT == i)				# get a subset of the whole database
+		 if (Mim.s.p$PLOT[1] != 5) {					# if plot number is not 5: !!! (tengo que ver por qué, está vacío)		
+		  if (all(!is.na(Mim.s.p$Age))) {				# if subset has all ages registered:
+		     lam.list <- c()						# create a new lambda list
+		     min.a <- min(Mim.s.p$Age, na.rm = TRUE)			# get maximum age
+		     max.a <- max(Mim.s.p$Age, na.rm = TRUE)			# get minimum age
+		     n.1.i <- which(Mim.s.p$Age == min.a)			# get rows containing trees in year a
+		     n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get tree hight and order
+		     init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # count trees in each size class and set a population structure vector
+		     for (a in ((min.a+1):max.a)) {				# for each age in plot subset:
+			  n.a.db <- droplevels(subset(Mim.s.p, Age == a))	# drop levels
+			  n.a.v.i <- nlevels(n.a.db$id)				# count trees
+			  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)			# get lambda
+			  init.n.a.v.i <- n.a.v.i				# reset initial n
+			  lam.list <- c(lam.list, lam.a.i)			# add lambda to list
 		      }
-		     plot.lam.list[(min.a+1):max.a, as.numeric(i)] <- lam.list
+		     plot.lam.list[(min.a+1):max.a, as.numeric(i)] <- lam.list	# set lambda values and plot
 		}
 	       }
 	   }
- 	   plot.lam.plot <- list(NA)
- 	   for (i in 1:nplot) {
-      		if (i != 5) {
-        		plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2))
-        		names(plot.l.i) <- c("Age", "lambda")
-       			plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))
-        		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)]
-        		plot.lam.plot[[i]] <- plot.l.i 
-      			}
-      		else if (i == 5) {
-        		plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))
-        		names(plot.l.5) <- c("Age", "lambda")
-        		plot.l.5$Age[1] <- Age.mature
-        		plot.l.5$lambda[1] <- lam.mature
-        		plot.lam.plot[[5]] <- plot.l.5
+ 	   plot.lam.plot <- list(NA)						# create lambda list
+ 	   for (i in 1:nplot) {							# for each plot:
+      		if (i != 5) {							# if it is not 5:
+        		plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2)) # create new database: cols = 2 & rows = number of not NA in list
+        		names(plot.l.i) <- c("Age", "lambda")			# set names
+       			plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))	# set valid ages
+        		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)] # set lambda values
+        		plot.lam.plot[[i]] <- plot.l.i 				# add lambda matrix to list
+      			}							
+      		else if (i == 5) {						# if plot is 5:
+        		plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))	# create new database for mature forest
+        		names(plot.l.5) <- c("Age", "lambda")			# name it
+        		plot.l.5$Age[1] <- Age.mature				# set age as mature
+        		plot.l.5$lambda[1] <- lam.mature			# set lambda as calculated for mature forest above
+        		plot.lam.plot[[5]] <- plot.l.5				# set plot number
       			}
  	   	       }
  }
