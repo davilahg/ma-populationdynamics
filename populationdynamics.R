@@ -249,6 +249,51 @@ library(gridExtra)
      ob.lam.df$ob.lambda[1:(Age.mature+1)] <- ob.lam.list # set observed lambda value
      lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plotting
 }
+# predicted lambda by plot
+{   
+     load("./Data/k-p-list.RData")						# read list of kernels calculated by plot: poner link del código?
+     s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))		# transform plot variable to factor
+     nplot <- nlevels(s1.db$PLOT)						# get number of plots
+     est.lam.df <- as.data.frame(matrix(nrow = Age.mature, ncol = nplot, NA))	# create new database for estimated lambda values
+     names(est.lam.df) <- 1:nplot						# plot names
+     for (i in nplot) {								# for each plot:
+       	 Mim.s.p <- subset(s1.db, PLOT == i & !is.na(ln.h2))			# get a subset of plot i omitting NA's
+         if (Mim.s.p$PLOT[1] != 5) {						# if plot number is 5 (mature forest):
+          if (all(!is.na(Mim.s.p$Age))) {					# if it is not an empty list:
+             lam.list <- c()							# create new empty list for lambda values
+             min.a <- min(Mim.s.p$Age, na.rm = TRUE)				# set maximum height for that plot
+             max.a <- max(Mim.s.p$Age, na.rm = TRUE)				# set minimum height for that plot
+             n.1.i <- which(Mim.s.p$Age == min.a)				# get row number of trees
+             n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get height of trees 
+             init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # get size structure vector and set initial vector
+             for (a in (min.a+1):max.a) {					# for every year:
+                  n.a.v.i <- k.p.list[[as.integer(i)]][(a-min.a),,]%*%init.n.a.v.i # multiply size vector by plot kernel
+                  lam.a.i <- sum(n.a.v.i)/sum(init.n.a.v.i)			# get lambda 
+                  init.n.a.v.i <- n.a.v.i					# reset initial vector
+                  lam.list <- c(lam.list, lam.a.i)				# add lambda to list
+              }
+             est.lam.df[(min.a+1):max.a, as.numeric(i)] <- lam.list		# fill database
+        }
+       }
+     }
+     est.lam.list <- list(NA)							# create new list
+     for (i in 1:nplot) {							# for each plot
+      if (i != 5) {								# if nor plot 5 (not mature forest):
+        plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(est.lam.df[,i]) == TRUE)), ncol = 2)) # create new database for that plot
+        names(plot.l.i) <- c("Age", "lambda")					# name columns
+        plot.l.i$Age <- which(!is.na(est.lam.df[,i]))				# set ages
+        plot.l.i$lambda <- est.lam.df[,i][which(!is.na(est.lam.df[,i]) == TRUE)]# set lambda values
+        est.lam.list[[i]] <- plot.l.i 						# set plot number
+	#print(est.lam.list[[i]])
+        } else {								# if it is plot 5:
+        plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))			# create new database
+        names(plot.l.5) <- c("Age", "lambda")					# name columns
+        plot.l.5$Age[1] <- Age.mature						# set age
+        plot.l.5$lambda[1] <- lam.mature					# set lambda value
+        est.lam.list[[5]] <- plot.l.5						# set plot
+      }
+     }
+}
 # observed lambda by plot
 {   
            nplot <- nlevels(s1.db$PLOT)						# get number of plots
@@ -285,7 +330,7 @@ library(gridExtra)
        			plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))	# set valid ages
         		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)] # set lambda values
         		plot.lam.plot[[i]] <- plot.l.i 				# add lambda matrix to list
-      			}							
+			}							
       		else if (i == 5) {						# if plot is 5:
         		plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))	# create new database for mature forest
         		names(plot.l.5) <- c("Age", "lambda")			# name it
@@ -327,6 +372,37 @@ library(gridExtra)
  	 p.lam.ob
  	 #ggsave("no-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
  }
+# estimating inmigration
+{
+  lambda.obs <- plot.lam.plot
+  lambda.est <- plot.est.plot
+  distance.l <- function(c) {
+  dist.l <- 0
+  lam.est <- c()
+  for (p in 1:nplot)
+        if (p != 5) {
+            S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
+            S.p <- droplevels(S.p)
+            min.a <- min(S.p$Age)
+            max.a <- max(S.p$Age)
+            n.1 <- which(S.p$Age == min.a)
+            n.1.h <- log(S.p[n.1,]$h2)
+            n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
+            init.n.a.v <- n.1.v+c*F5
+            for (a in (min.a+1):max.a) {
+                n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
+                lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
+                init.n.a.v <- n.a.v+c*F5
+                lam.est <- c(lam.est, lam.a)
+            }
+            lambda.obs.plot <- rep(NA, nrow(lambda.obs[[p]]))
+            for (j in (1:nrow(lambda.obs[[p]])))
+                dist.l <- dist.l + (lam.est[j]-lambda.obs[[p]]$lambda[j])^2
+        dist.l <- sqrt(dist.l)
+        cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
+       }
+  return(dist.l)
+ } 
 
 
 
