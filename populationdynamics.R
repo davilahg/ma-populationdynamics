@@ -276,6 +276,7 @@ library(gridExtra)
 		}
 	       }
 	   }
+	   nplot <- nlevels(s1.db$PLOT)	
  	   plot.lam.plot <- list(NA)						# create lambda list
  	   for (i in 1:nplot) {							# for each plot:
       		if (i != 5) {							# if it is not 5:
@@ -297,7 +298,7 @@ library(gridExtra)
 # plots
 # total, no migration
 {
-     lambda.df <- as.d}ata.frame(list(lambda = lam.list, Age = 1:Age.mature))
+     lambda.df <- as.data.frame(list(lambda = tot.lam.pred, Age = 1:Age.mature))
      lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
      	scale_fill_discrete(guide=FALSE) +
      	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
