@@ -190,14 +190,16 @@ library(gridExtra)
 # total predicted lambda
 {
 	lam.list <- c()
-	n.0 <- which(s.db$Age == 0) # get trees in first year (row number)
-	n.0.h <- log(s.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
+	n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
+	n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
 	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-	init.n.a.v <- n.0.v # rename vector
+	init.n.a.v <- n.0.v # renameF vector
+	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
 	n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
 	for (a in 1:Age.mature) {
 		 n.a.v <- k.i.j.a[a,,]%*%init.n.a.v # get kernel for first value (year)
 		 lam.a <- sum(n.a.v)/sum(init.n.a.v) # get lambda for first year
+		 size.v.a.NM[[a]] <- init.n.a.v 
 		 init.n.a.v <- n.a.v # rename initial vector to start again
 		 n.list <- c(n.list, sum(n.a.v)) # add next population size value to vector
 		 lam.list <- c(lam.list, lam.a) # add next lambda value to vector
@@ -430,9 +432,11 @@ library(gridExtra)
      	n.0.h <- log(s1.db[n.0,]$h2)
      	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
      	init.n.a.v <- n.0.v
+	size.v.a.WM <- list(NA) # size structure vector by year, WM = with migration
      	n.list <- c(sum(init.n.a.v))
      	for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+		size.v.a.WM[[a]] <- init.n.a.v
        		lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v) # add c individuals
        		init.n.a.v <- n.a.v+c*F5		# add size structure
        		n.list <- c(n.list, sum(n.a.v))
@@ -454,7 +458,11 @@ library(gridExtra)
 				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
 }
-
+# size structure change over time
+{
+	size.v.a.WM
+	size.v.a.NM
+}
 
 
 
