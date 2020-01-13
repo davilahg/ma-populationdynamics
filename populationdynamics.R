@@ -256,7 +256,7 @@ library(gridExtra)
      nplot <- nlevels(s1.db$PLOT)						# get number of plots
      est.lam.df <- as.data.frame(matrix(nrow = Age.mature, ncol = nplot, NA))	# create new database for estimated lambda values
      names(est.lam.df) <- 1:nplot						# plot names
-     for (i in nplot) {								# for each plot:
+     for (i in 1:nplot) {								# for each plot:
        	 Mim.s.p <- subset(s1.db, PLOT == i & !is.na(ln.h2))			# get a subset of plot i omitting NA's
          if (Mim.s.p$PLOT[1] != 5) {						# if plot number is 5 (mature forest):
           if (all(!is.na(Mim.s.p$Age))) {					# if it is not an empty list:
@@ -266,7 +266,7 @@ library(gridExtra)
              n.1.i <- which(Mim.s.p$Age == min.a)				# get row number of trees
              n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get height of trees 
              init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # get size structure vector and set initial vector
-             for (a in (min.a+1):max.a) {					# for every year:
+             for (a in ((min.a+1):max.a)) {					# for every year:
                   n.a.v.i <- k.p.list[[as.integer(i)]][(a-min.a),,]%*%init.n.a.v.i # multiply size vector by plot kernel
                   lam.a.i <- sum(n.a.v.i)/sum(init.n.a.v.i)			# get lambda 
                   init.n.a.v.i <- n.a.v.i					# reset initial vector
