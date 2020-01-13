@@ -460,10 +460,48 @@ library(gridExtra)
 }
 # size structure change over time
 {
-	size.v.a.WM
-	size.v.a.NM
-}
+	pop.size.NM <- c()
+	pop.size.WM <- c()
+	size.v.a.NM.s <- list(NA)
+	size.v.a.WM.s <- list(NA)
+	for (a in 1:Age.mature) {
+		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))		# get population size 
+		size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
+		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
+		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
+		}
+	plot(1:Age.mature, pop.size.NM) # plot population size
+	plot(1:Age.mature, pop.size.WM)
+	dat.NM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, NO MIGRATION
+	names(dat.NM) <- c("Age", "Prob.j", "size")
+	count <- 1:10
+	for (i in count) {
+		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),1] <- rep((count[i]*10)-9, Age.mature)
+		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),2] <- size.v.a.NM.s[[(count[i]*10)-9]]
+		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),3] <- exp(x.pred)
+		}
+	dat.NM[901:1000,1] <- rep(Age.mature,Age.mature)
+	dat.NM[901:1000,2] <- size.v.a.NM.s[[Age.mature]]
+	dat.NM$Age <- as.factor(as.character(dat.NM$Age))
+	#
+	dat.WM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, WITH MIGRATION
+	names(dat.WM) <- c("Age", "Prob.j", "size")
+	count <- 1:10
+	for (i in count) {
+		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),1] <- rep((count[i]*10)-9, Age.mature)
+		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),2] <- size.v.a.WM.s[[(count[i]*10)-9]]
+		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),3] <- exp(x.pred)
+		}
+	dat.WM[901:1000,1] <- rep(Age.mature,Age.mature)
+	dat.WM[901:1000,2] <- size.v.a.WM.s[[Age.mature]]
+	# 
+	ggplot(dat.NM, aes(x=size)) + geom_histogram(binwidth=.5, colour="black", fill="white") +
+    		facet_grid(Age ~ .)
+	ggplot(dat.WM, aes(x=size)) + geom_histogram(binwidth=.5, colour="black", fill="white") + 
+    		facet_grid(Age ~ .)
 
+ggplot(dat.NM, aes(x=size)) +
+    geom_histogram(binwidth=.5, colour="black", fill="white")
 
 
 
