@@ -13,6 +13,7 @@ library(mgcv)
 library(reshape2)
 library(plotly)
 library(gridExtra)
+library(plot3D)
 # read data
 {
   s.db <- read.csv("./Data/survival.csv") # survival with estimated h1
@@ -403,7 +404,7 @@ library(gridExtra)
  	 p.lam.p.2 <- as.data.frame(matrix(nrow = 0, ncol = 2))
  	 names(p.lam.p.2) <- c("Age", "lambda")
  	 for (i in 1:nplot) {
- 		 p.lam.p.i <-transform(plot.lam.plot[[i]])
+ 		 p.lam.p.i <-transform(obs.lam.plot[[i]])
  		 p.lam.p.2  <- rbind(p.lam.p.2, p.lam.p.i)
  	 }
  	 p.lam.ob <- ggplot(p.lam.p.2, aes(x = Age, y = lambda, alpha = 1/2), show.legend = FALSE) + 
@@ -457,6 +458,7 @@ library(gridExtra)
 				scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
+	#ggsave("with-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
 }
 # size structure change over time
 {
@@ -470,8 +472,9 @@ library(gridExtra)
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
-	plot(1:Age.mature, pop.size.NM) # plot population size
-	plot(1:Age.mature, pop.size.WM)
+	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration") # plot population size
+	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration")
+	#
 	dat.NM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, NO MIGRATION
 	names(dat.NM) <- c("Age", "Prob.j", "size")
 	count <- 1:10
@@ -494,19 +497,11 @@ library(gridExtra)
 		}
 	dat.WM[901:1000,1] <- rep(Age.mature,Age.mature)
 	dat.WM[901:1000,2] <- size.v.a.WM.s[[Age.mature]]
-	# 
-	ggplot(dat.NM, aes(x=size)) + geom_histogram(binwidth=.5, colour="black", fill="white") +
-    		facet_grid(Age ~ .)
-	ggplot(dat.WM, aes(x=size)) + geom_histogram(binwidth=.5, colour="black", fill="white") + 
-    		facet_grid(Age ~ .)
-
-ggplot(dat.NM, aes(x=size)) +
-    geom_histogram(binwidth=.5, colour="black", fill="white")
-
-
-
-
-
+	#
+	size.str.mat.NM <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)
+	size.str.mat.WM <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
+	hist3D(exp(x.pred), (1:Age.mature), size.str.mat.NM, col = "grey", border = "black", xlab = "Size", ylab = "Age", zlab = "Probability", main = "Size structure change without migration")	
+	hist3D(exp(x.pred), (1:Age.mature), size.str.mat.WM, col = "grey", border = "black", xlab = "Size", ylab = "Age", zlab = "Probability", main = "Size structure change with migration")
 
 
 # esto ya no está limpio
