@@ -203,6 +203,7 @@ library(gridExtra)
 		 lam.list <- c(lam.list, lam.a) # add next lambda value to vector
 		 }
 		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
+		lam.list.NM <- lam.list # set lambda list with no migration
 } 
 # total observed lambda
 {
@@ -384,19 +385,19 @@ library(gridExtra)
 # plots
 # total, no migration
 {
-     lambda.df <- as.data.frame(list(lambda = tot.lam.pred, Age = 1:Age.mature))
-     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
+     lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
+     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
      	scale_fill_discrete(guide=FALSE) +
      	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
      	lambda.edad + 
      	theme_minimal() +
      	theme(legend.position = "none")
-     	lambda.edad
+     lambda.edad
      #ggsave("lambda-edad.png", lambda.edad, device = "png", width = 9, height = 7, units = "in", dpi = 180*2)
 }
 # by plot, no migration
  {
- 	 lambda.df.2 <- transform(lambda.df)
+ 	 lambda.df.2.NM <- transform(lambda.df.NM)
  	 p.lam.p.2 <- as.data.frame(matrix(nrow = 0, ncol = 2))
  	 names(p.lam.p.2) <- c("Age", "lambda")
  	 for (i in 1:nplot) {
@@ -407,9 +408,10 @@ library(gridExtra)
  	 theme_minimal() +
  	 geom_line(size = 1) + 
      	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
- 	 geom_line(data = lambda.df.2, aes(x = Age, y = lambda), col = "red", size = 1, alpha = 1/3, show.legend = FALSE) +
+ 	 geom_line(data = lambda.df.2.NM, aes(x = Age, y = lambda), col = "red", size = 2, alpha = 1/3, show.legend = FALSE) +
  	 labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
- 	 scale_alpha(guide = "none")
+ 	 scale_alpha(guide = "none") +
+	 scale_y_continuous(limits = c(0, 5.8))
  	 p.lam.ob
  	 #ggsave("no-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
  }
@@ -448,7 +450,8 @@ library(gridExtra)
 				theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
 				geom_line(size = 2, alpha = 1/3, col = "red") + 
 				geom_line(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
-				scale_alpha(guide = "none")
+				scale_alpha(guide = "none") +
+				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
 }
 
