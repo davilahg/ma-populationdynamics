@@ -284,7 +284,6 @@ library(gridExtra)
         plot.l.i$Age <- which(!is.na(est.lam.df[,i]))				# set ages
         plot.l.i$lambda <- est.lam.df[,i][which(!is.na(est.lam.df[,i]) == TRUE)]# set lambda values
         est.lam.list[[i]] <- plot.l.i 						# set plot number
-	#print(est.lam.list[[i]])
         } else {								# if it is plot 5:
         plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))			# create new database
         names(plot.l.5) <- c("Age", "lambda")					# name columns
@@ -322,24 +321,66 @@ library(gridExtra)
 	       }
 	   }
 	   nplot <- nlevels(s1.db$PLOT)	
- 	   plot.lam.plot <- list(NA)						# create lambda list
+ 	   obs.lam.plot <- list(NA)						# create lambda list
  	   for (i in 1:nplot) {							# for each plot:
       		if (i != 5) {							# if it is not 5:
         		plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2)) # create new database: cols = 2 & rows = number of not NA in list
         		names(plot.l.i) <- c("Age", "lambda")			# set names
        			plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))	# set valid ages
         		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)] # set lambda values
-        		plot.lam.plot[[i]] <- plot.l.i 				# add lambda matrix to list
+        		obs.lam.plot[[i]] <- plot.l.i 				# add lambda matrix to list
 			}							
       		else if (i == 5) {						# if plot is 5:
         		plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))	# create new database for mature forest
         		names(plot.l.5) <- c("Age", "lambda")			# name it
         		plot.l.5$Age[1] <- Age.mature				# set age as mature
         		plot.l.5$lambda[1] <- lam.mature			# set lambda as calculated for mature forest above
-        		plot.lam.plot[[5]] <- plot.l.5				# set plot number
+        		obs.lam.plot[[5]] <- plot.l.5				# set plot number
       			}
  	   	       }
  }
+# estimating inmigration
+{
+  lambda.obs <- obs.lam.plot
+  lambda.est <- est.lam.list
+  distance.l <- function(c) {
+  	  dist.l <- 0
+  	  lam.est <- c()
+	  for (p in 1:nplot)
+		if (p != 5) {
+		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
+		    S.p <- droplevels(S.p)
+		    min.a <- min(S.p$Age)
+		    max.a <- max(S.p$Age)
+		    n.1 <- which(S.p$Age == min.a)
+		    n.1.h <- log(S.p[n.1,]$h2)
+		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
+		    init.n.a.v <- n.1.v+c*F5
+		    for (a in (min.a+1):max.a) {
+			n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
+			lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
+			init.n.a.v <- n.a.v+c*F5
+			lam.est <- c(lam.est, lam.a)
+		    }
+		    lambda.obs.plot <- rep(NA, nrow(lambda.obs[[p]]))
+		    for (j in (1:nrow(lambda.obs[[p]])))
+			dist.l <- dist.l + (lam.est[j]-lambda.obs[[p]]$lambda[j])^2
+		dist.l <- sqrt(dist.l)
+		cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
+	        }
+  	  return(dist.l)
+ } 
+ # Try different estimators
+ {
+    opt.brent <- optim(0, distance.l, method = "Brent", lower = 0, upper = 100)
+    opt.brent$par # 10.79303, dist = 1.702837
+    opt.lbf <- optim(0, distance.l, method = "L-BFGS-B")
+    c <- opt.lbf$par # 10.79292, dist = 1.702837
+    opt.bfgs <- optim(0, distance.l, method = "BFGS")
+    opt.bfgs$par # 10.64919, dist = 1.702837
+ }
+}
+
 # plots
 # total, no migration
 {
@@ -372,40 +413,44 @@ library(gridExtra)
  	 p.lam.ob
  	 #ggsave("no-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
  }
-# estimating inmigration
+# by plot, with migration
 {
-  lambda.obs <- plot.lam.plot
-  lambda.est <- plot.est.plot
-  distance.l <- function(c) {
-  dist.l <- 0
-  lam.est <- c()
-  for (p in 1:nplot)
-        if (p != 5) {
-            S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
-            S.p <- droplevels(S.p)
-            min.a <- min(S.p$Age)
-            max.a <- max(S.p$Age)
-            n.1 <- which(S.p$Age == min.a)
-            n.1.h <- log(S.p[n.1,]$h2)
-            n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
-            init.n.a.v <- n.1.v+c*F5
-            for (a in (min.a+1):max.a) {
-                n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
-                lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
-                init.n.a.v <- n.a.v+c*F5
-                lam.est <- c(lam.est, lam.a)
-            }
-            lambda.obs.plot <- rep(NA, nrow(lambda.obs[[p]]))
-            for (j in (1:nrow(lambda.obs[[p]])))
-                dist.l <- dist.l + (lam.est[j]-lambda.obs[[p]]$lambda[j])^2
-        dist.l <- sqrt(dist.l)
-        cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
-       }
-  return(dist.l)
- } 
+	obs.lam.p <- as.data.frame(matrix(nrow = 0, ncol = 3))
+	names(obs.lam.p) <- c("Age", "lambda", "plot")
+	for (i in 1:nplot) {
+		obs.lam.p.i <-transform(obs.lam.plot[[i]], plot = as.factor(i))
+		obs.lam.p  <- rbind(obs.lam.p, obs.lam.p.i)
+		}
+ # calculate new lambda list considering migration
+ {
+     	lam.list <- c()
+     	n.0 <- which(s1.db$Age == 0)
+     	n.0.h <- log(s1.db[n.0,]$h2)
+     	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+     	init.n.a.v <- n.0.v
+     	n.list <- c(sum(init.n.a.v))
+     	for (a in 1:Age.mature) {
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+       		lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v) # add c individuals
+       		init.n.a.v <- n.a.v+c*F5		# add size structure
+       		n.list <- c(n.list, sum(n.a.v))
+       		lam.list <- c(lam.list, lam.a)
+       		}
+      	tot.lam.pred <- lam.list
+	lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
+   	lambda.df.2 <- transform(lambda.df, plot = as.factor("total"))
+   } 
 
-
-
+	plot.l.graf.c <- ggplot(lambda.df.2, aes(x = Age, y = lambda)) +
+				theme_minimal() +
+				xlab(expression(paste("Abandonment time ", italic(t), " (years)"))) +
+				ylab(expression(lambda)) +
+				theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
+				geom_line(size = 2, alpha = 1/3, col = "red") + 
+				geom_line(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
+				scale_alpha(guide = "none")
+	plot.l.graf.c
+}
 
 
 
