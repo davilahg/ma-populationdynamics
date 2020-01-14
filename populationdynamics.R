@@ -86,6 +86,7 @@ library(plot3D)
 	f4.a[which(f4.a == 0)] <- 0.00000001 # change 0 to perform beta regression
 	x <- n.ages
 	gam.f4 <- gam(f4.a~s(x, k = 3), family = betar(link = "logit"))
+ }
 }
 # discretizing vital rates functions
 {
@@ -183,7 +184,7 @@ library(plot3D)
    p.i.j.a[a, i, ] <- p.i <- s.i.j.a[a, i, ]*G[a, i, ]
    f.i.j.a[a, i, ] <- f.i.a[i, a]
    F5.i.j.a[a, i, ] <- F5
-   f.i <- f.i.a[i, a]*F5
+   f.i <- f.i.a[i, ]*F5
    f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
    k.i.j.a[a, i, ] <- p.i+f.i
   }
@@ -194,19 +195,18 @@ library(plot3D)
 	n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
 	n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
 	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-	init.n.a.v <- n.0.v # renameF vector
+	init.n.a.v <- n.0.v # rename vector
 	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
 	n.list <- c() # create population size vector & setting first value
 	for (a in 1:Age.mature) {
-       		n.a.v <- t(k.i.j.a[a,,])%*%as.matrix(init.n.a.v)
+       		n.a.v <- t(k.i.j.a[a,,])%*%init.n.a.v
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
        		size.v.a.NM[[a]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
        		init.n.a.v <- n.a.v			# add size structure
 		}
-		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
-		lam.list.NM <- lam.list # set lambda list with no migration
+		tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
 } 
 # total observed lambda
 {
@@ -271,7 +271,7 @@ library(plot3D)
              n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get height of trees 
              init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # get size structure vector and set initial vector
              for (a in ((min.a+1):max.a)) {					# for every year:
-                  n.a.v.i <- k.p.list[[as.integer(i)]][(a-min.a),,]%*%init.n.a.v.i # multiply size vector by plot kernel
+                  n.a.v.i <- t(k.p.list[[as.integer(i)]][(a-min.a),,])%*%init.n.a.v.i # multiply size vector by plot kernel
                   lam.a.i <- sum(n.a.v.i)/sum(init.n.a.v.i)			# get lambda 
                   init.n.a.v.i <- n.a.v.i					# reset initial vector
                   lam.list <- c(lam.list, lam.a.i)				# add lambda to list
@@ -361,7 +361,7 @@ library(plot3D)
 		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
 		    init.n.a.v <- n.1.v+c*F5
 		    for (a in (min.a+1):max.a) {
-			n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
+			n.a.v <- t(k.p.list[[p]][(a-min.a),,])%*%init.n.a.v
 			lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
 			init.n.a.v <- n.a.v+c*F5
 			lam.est <- c(lam.est, lam.a)
@@ -373,6 +373,7 @@ library(plot3D)
 		cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
 	        }
   	  return(dist.l)
+  }
  } 
  # Try different estimators
  {
@@ -389,7 +390,7 @@ library(plot3D)
 # total, no migration
 {
      lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
-     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
+     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
      	scale_fill_discrete(guide=FALSE) +
      	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
      	lambda.edad + 
@@ -502,8 +503,12 @@ library(plot3D)
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim), theta = -90)	
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim), theta = -90)
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
+	       ,theta = -90
+	       )	
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
+	       #,theta = -90
+	       )
 
 
 # esto ya no está limpio
