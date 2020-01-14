@@ -196,15 +196,15 @@ library(plot3D)
 	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
 	init.n.a.v <- n.0.v # renameF vector
 	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
-	n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
+	n.list <- c() # create population size vector & setting first value
 	for (a in 1:Age.mature) {
-		 n.a.v <- k.i.j.a[a,,]%*%init.n.a.v # get kernel for first value (year)
-		 lam.a <- sum(n.a.v)/sum(init.n.a.v) # get lambda for first year
-		 size.v.a.NM[[a]] <- init.n.a.v 
-		 init.n.a.v <- n.a.v # rename initial vector to start again
-		 n.list <- c(n.list, sum(n.a.v)) # add next population size value to vector
-		 lam.list <- c(lam.list, lam.a) # add next lambda value to vector
-		 }
+       		n.a.v <- t(k.i.j.a[a,,])%*%as.matrix(init.n.a.v)
+       		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+       		size.v.a.NM[[a]] <- n.a.v
+        	n.list <- c(n.list, sum(n.a.v))
+       		lam.list <- c(lam.list, lam.a)
+       		init.n.a.v <- n.a.v			# add size structure
+		}
 		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
 		lam.list.NM <- lam.list # set lambda list with no migration
 } 
@@ -428,22 +428,23 @@ library(plot3D)
 		}
  # calculate new lambda list considering migration
  {
-     	lam.list <- c()
-     	n.0 <- which(s1.db$Age == 0)
-     	n.0.h <- log(s1.db[n.0,]$h2)
+     	lam.list <- c()			# create lambda vector
+     	n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+     	n.0.h <- log(s1.db[n.0,]$h2)	#
      	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-     	init.n.a.v <- n.0.v
+     	init.n.a.v <- n.0.v+c*F5
 	size.v.a.WM <- list(NA) # size structure vector by year, WM = with migration
-     	n.list <- c(sum(init.n.a.v))
+     	n.list <- c()
      	for (a in 1:Age.mature) {
-       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-		size.v.a.WM[[a]] <- init.n.a.v
-       		lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v) # add c individuals
-       		init.n.a.v <- n.a.v+c*F5		# add size structure
-       		n.list <- c(n.list, sum(n.a.v))
+       		n.a.v <- t(k.i.j.a[a,,])%*%init.n.a.v
+       		n.a.v <- n.a.v+c*F5
+       		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+       		size.v.a.WM[[a]] <- n.a.v
+        	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
+       		init.n.a.v <- n.a.v			# add size structure
        		}
-      	tot.lam.pred <- lam.list
+            	tot.lam.pred <- lam.list
 	lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
    	lambda.df.2 <- transform(lambda.df, plot = as.factor("total"))
    } 
@@ -464,16 +465,16 @@ library(plot3D)
 {
 	pop.size.NM <- c()
 	pop.size.WM <- c()
-	size.v.a.NM.s <- list(NA)
-	size.v.a.WM.s <- list(NA)
+	size.v.a.NM.s <- list(NA) # size structure vector by age, NO MIGRATION, standardized
+	size.v.a.WM.s <- list(NA) # size structure vector by age, WITH MIGRATION, standardized
 	for (a in 1:Age.mature) {
-		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))		# get population size 
+		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))			# get population size 
 		size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
-	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration") # plot population size
-	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration")
+	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
+	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
 	#
 	dat.NM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, NO MIGRATION
 	names(dat.NM) <- c("Age", "Prob.j", "size")
@@ -498,10 +499,11 @@ library(plot3D)
 	dat.WM[901:1000,1] <- rep(Age.mature,Age.mature)
 	dat.WM[901:1000,2] <- size.v.a.WM.s[[Age.mature]]
 	#
-	size.str.mat.NM <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)
-	size.str.mat.WM <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
-	hist3D(exp(x.pred), (1:Age.mature), size.str.mat.NM, col = "grey", border = "black", xlab = "Size", ylab = "Age", zlab = "Probability", main = "Size structure change without migration")	
-	hist3D(exp(x.pred), (1:Age.mature), size.str.mat.WM, col = "grey", border = "black", xlab = "Size", ylab = "Age", zlab = "Probability", main = "Size structure change with migration")
+	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
+	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
+	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim), theta = -90)	
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim), theta = -90)
 
 
 # esto ya no está limpio
