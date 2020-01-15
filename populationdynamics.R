@@ -43,6 +43,7 @@ library(plot3D)
  x.pred <- (e.pred[2:(m+1)]+e.pred[1:m])/2
  f4.pred <- Age.pred <- 1:Age.mature
  nplot <- nlevels(s.db$PLOT)
+ ex.pr <- exp(x.pred)
 }
 # modelling vital rates
 {
