@@ -188,6 +188,15 @@ library(plot3D)
    f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
    k.i.j.a[a, i, ] <- p.i+f.i
   }
+# kernel plots
+k.ages <- c(1,10,20,30,40,50,60,80,100)
+zlim = c(0, max(k.i.j.a[,,]))
+png(filename="kernel.a.png",width=4,height=4,units="in",res=150)
+par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
+for (a in k.ages)
+	image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim, xlab = "", ylab = "", main = paste0("Age =  ", a))
+mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
+mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 }
 # total predicted lambda
 {
@@ -475,36 +484,12 @@ library(plot3D)
 		}
 	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration") # plot population size
 	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration")
-	#
-	dat.NM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, NO MIGRATION
-	names(dat.NM) <- c("Age", "Prob.j", "size")
-	count <- 1:10
-	for (i in count) {
-		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),1] <- rep((count[i]*10)-9, Age.mature)
-		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),2] <- size.v.a.NM.s[[(count[i]*10)-9]]
-		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),3] <- exp(x.pred)
-		}
-	dat.NM[901:1000,1] <- rep(Age.mature,Age.mature)
-	dat.NM[901:1000,2] <- size.v.a.NM.s[[Age.mature]]
-	dat.NM$Age <- as.factor(as.character(dat.NM$Age))
-	#
-	dat.WM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, WITH MIGRATION
-	names(dat.WM) <- c("Age", "Prob.j", "size")
-	count <- 1:10
-	for (i in count) {
-		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),1] <- rep((count[i]*10)-9, Age.mature)
-		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),2] <- size.v.a.WM.s[[(count[i]*10)-9]]
-		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),3] <- exp(x.pred)
-		}
-	dat.WM[901:1000,1] <- rep(Age.mature,Age.mature)
-	dat.WM[901:1000,2] <- size.v.a.WM.s[[Age.mature]]
-	#
 	size.str.mat.NM <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)
 	size.str.mat.WM <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
 	zlim = max(max(size.str.mat.NM), max(size.str.mat.WM))
 	hist3D(y = exp(x.pred), x = (1:Age.mature), z = size.str.mat.NM, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0,zlim), theta = -90)	
 	hist3D(y = exp(x.pred), x = (1:Age.mature), z = size.str.mat.WM, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim), theta = -90)
-
+}
 
 # esto ya no está limpio
 
