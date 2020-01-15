@@ -183,7 +183,7 @@ library(plot3D)
    p.i.j.a[a, i, ] <- p.i <- s.i.j.a[a, i, ]*G[a, i, ]
    f.i.j.a[a, i, ] <- f.i.a[i, a]
    F5.i.j.a[a, i, ] <- F5
-   f.i <- f.i.a[i, a]*F5
+   f.i <- f.i.a[i, ]*F5
    f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
    k.i.j.a[a, i, ] <- p.i+f.i
   }
@@ -500,8 +500,9 @@ library(plot3D)
 	#
 	size.str.mat.NM <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)
 	size.str.mat.WM <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
-	hist3D(exp(x.pred), (1:Age.mature), size.str.mat.NM, col = "grey", border = "black", xlab = "Size", ylab = "Age", zlab = "Probability", main = "Size structure change without migration")	
-	hist3D(exp(x.pred), (1:Age.mature), size.str.mat.WM, col = "grey", border = "black", xlab = "Size", ylab = "Age", zlab = "Probability", main = "Size structure change with migration")
+	zlim = max(max(size.str.mat.NM), max(size.str.mat.WM))
+	hist3D(y = exp(x.pred), x = (1:Age.mature), z = size.str.mat.NM, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0,zlim), theta = -90)	
+	hist3D(y = exp(x.pred), x = (1:Age.mature), z = size.str.mat.WM, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim), theta = -90)
 
 
 # esto ya no está limpio
