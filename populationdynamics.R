@@ -14,6 +14,7 @@ library(reshape2)
 library(plotly)
 library(gridExtra)
 library(plot3D)
+library(fields)
 # read data
 {
   s.db <- read.csv("./Data/survival.csv") # survival with estimated h1
@@ -87,6 +88,7 @@ library(plot3D)
 	f4.a[which(f4.a == 0)] <- 0.00000001 # change 0 to perform beta regression
 	x <- n.ages
 	gam.f4 <- gam(f4.a~s(x, k = 3), family = betar(link = "logit"))
+ }
 }
 # discretizing vital rates functions
 {
@@ -191,12 +193,14 @@ library(plot3D)
 # kernel plots
 k.ages <- c(1,10,20,30,40,50,60,80,100)
 zlim = c(0, max(k.i.j.a[,,]))
-png(filename="kernel.a.png",width=4,height=4,units="in",res=150)
+png(filename="kernel.a.png")
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages)
 	image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim, xlab = "", ylab = "", main = paste0("Age =  ", a))
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
+#image.plot(legend.only=TRUE, zlim= zlim, col =  heat.colors(12),horizontal = F) 
+dev.off()
 }
 # total predicted lambda
 {
