@@ -193,34 +193,55 @@ library(fields)
 # kernel plots
 k.ages <- c(1,10,20,30,40,50,60,80,100)
 zlim.k = c(0, max(k.i.j.a[,,]))
-#png(filename="kernel.a.png",width=4,height=4,units="in",res=150)
+png(filename="kernel.atesis.png",width=8,height=8,units="in",res=150)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
-for (a in k.ages)
-	image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Age =  ", a))
+for (a in k.ages) {
+	if ( a != 100) {
+		image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
+	} else {
+		image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = "Mature forest")
+	 }
+	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #image.plot(legend.only=TRUE, zlim= zlim.k, col =  heat.colors(12),horizontal = F) 
 #dev.off()
 # growth plots
 zlim.g = c(0, max(g.i.j.a[,,]))
-#png(filename="G.a.png",width=4,height=4,units="in",res=150)
+png(filename="G.a-tesis.png",width=8,height=8,units="in",res=150)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
-for (a in k.ages)
-image(ex.pr, ex.pr, g.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Age =  ", a))
+for (a in k.ages) {
+	if (a != 100) {
+		image(ex.pr, ex.pr, g.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
+	 } else {
+		image(ex.pr, ex.pr, g.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = "Mature forest")
+	 } 
+	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #image.plot(legend.only=TRUE, zlim= zlim.g, col =  heat.colors(12),horizontal = F) 
 #dev.off()
 # p(x,y,t) = g(x,y,t)*s(x,t)
 zlim.p = c(0, max(p.i.j.a[,,]))
-#png(filename="P.a.png",width=4,height=4,units="in",res=150)
+png(filename="P.a.png",width=8,height=8,units="in",res=150)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
-for (a in k.ages)
-image(ex.pr, ex.pr, p.i.j.a[a,,], zlim = zlim.p, xlab = "", ylab = "", main = paste0("Age =  ", a))
+for (a in k.ages) {
+	if (a != 100) {
+		image(ex.pr, ex.pr, p.i.j.a[a,,], zlim = zlim.p, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
+	} else {
+		image(ex.pr, ex.pr, p.i.j.a[a,,], zlim = zlim.p, xlab = "", ylab = "", main = "Mature forest")
+	 }
+	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #image.plot(legend.only=TRUE, zlim= zlim.p, col =  heat.colors(12),horizontal = F) 
 #dev.off()
+# fecundity
+zlim.f = c(0, max(f.i.a[,]))
+png(filename="F.a.png",width=4,height=4,units="in",res=150)
+image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = "")
+#image.plot(legend.only=TRUE, zlim= zlim.f, col =  heat.colors(12),horizontal = F)
+dev.off()
 }
 # total predicted lambda
 {
