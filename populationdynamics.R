@@ -52,8 +52,9 @@ library(plot3D)
  gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = f2.db) # fruit number per individual: f2
  glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), f3.db, poisson) # seed number per fruit: f3
  den.f5 <- density(x = f5.db$h1, n = m, na.rm = TRUE, from = min(f5.db$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
+ den.f5$y[74:100] <- 0 # no probability of individuals higher than 3.2 m (maximum observed height of understory)
  den.f5$y <- den.f5$y/sum(den.f5$y)
- # gam.f4
+# gam.f4
  {
 	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # get ages with register in understory data
 	stb.n <- as.data.frame(table(f4.db$Age)) # get number of recruits per year
@@ -199,7 +200,7 @@ library(plot3D)
 	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
 	n.list <- c() # create population size vector & setting first value
 	for (a in 1:Age.mature) {
-       		n.a.v <- t(k.i.j.a[a,,])%*%init.n.a.v
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
        		size.v.a.NM[[a]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
@@ -271,7 +272,7 @@ library(plot3D)
              n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get height of trees 
              init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # get size structure vector and set initial vector
              for (a in ((min.a+1):max.a)) {					# for every year:
-                  n.a.v.i <- t(k.p.list[[as.integer(i)]][(a-min.a),,])%*%init.n.a.v.i # multiply size vector by plot kernel
+                  n.a.v.i <- k.p.list[[as.integer(i)]][(a-min.a),,]%*%init.n.a.v.i # multiply size vector by plot kernel
                   lam.a.i <- sum(n.a.v.i)/sum(init.n.a.v.i)			# get lambda 
                   init.n.a.v.i <- n.a.v.i					# reset initial vector
                   lam.list <- c(lam.list, lam.a.i)				# add lambda to list
@@ -361,7 +362,7 @@ library(plot3D)
 		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
 		    init.n.a.v <- n.1.v+c*F5
 		    for (a in (min.a+1):max.a) {
-			n.a.v <- t(k.p.list[[p]][(a-min.a),,])%*%init.n.a.v
+			n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
 			lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
 			init.n.a.v <- n.a.v+c*F5
 			lam.est <- c(lam.est, lam.a)
@@ -437,7 +438,7 @@ library(plot3D)
 	size.v.a.WM <- list(NA) # size structure vector by year, WM = with migration
      	n.list <- c()
      	for (a in 1:Age.mature) {
-       		n.a.v <- t(k.i.j.a[a,,])%*%init.n.a.v
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		n.a.v <- n.a.v+c*F5
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
        		size.v.a.WM[[a]] <- n.a.v
@@ -476,30 +477,6 @@ library(plot3D)
 		}
 	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
 	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
-	#
-	dat.NM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, NO MIGRATION
-	names(dat.NM) <- c("Age", "Prob.j", "size")
-	count <- 1:10
-	for (i in count) {
-		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),1] <- rep((count[i]*10)-9, Age.mature)
-		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),2] <- size.v.a.NM.s[[(count[i]*10)-9]]
-		dat.NM[((i-1)*Age.mature+1):(i*Age.mature),3] <- exp(x.pred)
-		}
-	dat.NM[901:1000,1] <- rep(Age.mature,Age.mature)
-	dat.NM[901:1000,2] <- size.v.a.NM.s[[Age.mature]]
-	dat.NM$Age <- as.factor(as.character(dat.NM$Age))
-	#
-	dat.WM <- as.data.frame(matrix(nrow = 10*Age.mature, ncol = 3)) # create new df for size structure change, WITH MIGRATION
-	names(dat.WM) <- c("Age", "Prob.j", "size")
-	count <- 1:10
-	for (i in count) {
-		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),1] <- rep((count[i]*10)-9, Age.mature)
-		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),2] <- size.v.a.WM.s[[(count[i]*10)-9]]
-		dat.WM[((i-1)*Age.mature+1):(i*Age.mature),3] <- exp(x.pred)
-		}
-	dat.WM[901:1000,1] <- rep(Age.mature,Age.mature)
-	dat.WM[901:1000,2] <- size.v.a.WM.s[[Age.mature]]
-	#
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
@@ -507,7 +484,7 @@ library(plot3D)
 	       ,theta = -90
 	       )	
 	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
-	       #,theta = -90
+	       ,theta = -90
 	       )
 
 
