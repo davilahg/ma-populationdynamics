@@ -1,7 +1,4 @@
 # Population dynamics of Mimosa acantholoba
-# open r terminal in desired work directory or substitute dir by directory path
-dir <- getwd()
-setwd(dir) # setting work directory
 # load requiered libraries
 library(AICcmodavg)
 library(betareg)
@@ -14,16 +11,25 @@ library(reshape2)
 library(plotly)
 library(gridExtra)
 library(plot3D)
+library(RCurl)
 # read data
 {
-  s.db <- read.csv("./Data/survival.csv") # survival with estimated h1
-  s1.db <- read.csv("./Data/survival-1.csv") # survival without estimated h1
-  g.db <- read.csv("./Data/growth.csv")
-  f1.db <- read.csv("./Data/reproduction-probability.csv")
-  f2.db <- read.csv("./Data/reproduction-fruits.csv")
-  f3.db <- read.csv("./Data/reproduction-seeds.csv")
-  f4.db <- read.csv("./Data/establishment.csv")
-  f5.db <- read.csv("./Data/understory.csv")
+  s.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/survival.csv")
+  s.db <- read.csv(text = s.db.text) # survival with estimated h1
+  s1.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/survival-1.csv")
+  s1.db <- read.csv(text = s1.db.text) # survival without estimated h1
+  g.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/growth.csv")
+  g.db <- read.csv(text = g.db.text)
+  f1.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/reproduction-probability.csv")
+  f1.db <- read.csv(text = f1.db.text)
+  f2.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/reproduction-fruits.csv")
+  f2.db <- read.csv(text = f2.db.text)
+  f3.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/reproduction-seeds.csv")
+  f3.db <- read.csv(text = f3.db.text)
+  f4.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/establishment.csv")
+  f4.db <- read.csv(text = f4.db.text)
+  f5.db.text <- getURL("https://github.com/davilahg/ma-populationdynamics/blob/master/understory.csv")
+  f5.db <- read.csv(text = f5.db.text)
  }
 # definitions
 {
@@ -174,23 +180,19 @@ library(plot3D)
 
 # creating kernel
 {
- k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
- s.i.a <- S
- f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
- for (a in 1:Age.mature)
-  f.i.a[, a] <- F1[, a]*F2[, a]*F3[, a]*F4[a]
- for (a in 1:Age.mature)
+k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+s.i.a <- S
+f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+for (a in 1:Age.mature) {
   for (i in 1:m) {
-   s.i.j.a[a, i, ] <- s.i.a[i, a]
-   g.i.j.a[a, i, ] <- G[a, i, ]
-   p.i.j.a[a, i, ] <- p.i <- s.i.j.a[a, i, ]*g.i.j.a[a, i, ]
-   f.i.j.a[a, i, ] <- f.i.a[i, a]
-   F5.i.j.a[a, i, ] <- F5
-   f.i <- f.i.a[i, ]*F5
-   f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
-   k.i.j.a[a, i, ] <- p.i+f.i
+   f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+   for (j in 1:m) {
+    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+   }
   }
-}
+ }
 # total predicted lambda
 {
 	lam.list <- c()
