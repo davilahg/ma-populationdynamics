@@ -1,7 +1,4 @@
 # Population dynamics of Mimosa acantholoba
-# open r terminal in desired work directory or substitute dir by directory path
-dir <- getwd()
-setwd(dir) # setting work directory
 # load requiered libraries
 library(AICcmodavg)
 library(betareg)
@@ -14,6 +11,7 @@ library(reshape2)
 library(plotly)
 library(gridExtra)
 library(plot3D)
+library(RCurl)
 library(fields)
 # read data
 {
@@ -25,6 +23,25 @@ library(fields)
   f3.db <- read.csv("./Data/reproduction-seeds.csv")
   f4.db <- read.csv("./Data/establishment.csv")
   f5.db <- read.csv("./Data/understory.csv")
+}
+# read data without downloaded directory
+{
+  s.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/survival.csv")
+  s.db <- read.csv(text = s.db.text) # survival with estimated h1
+  s1.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/survival-1.csv")
+  s1.db <- read.csv(text = s1.db.text) # survival without estimated h1
+  g.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/growth.csv")
+  g.db <- read.csv(text = g.db.text)
+  f1.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/reproduction-probability.csv")
+  f1.db <- read.csv(text = f1.db.text)
+  f2.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/reproduction-fruits.csv")
+  f2.db <- read.csv(text = f2.db.text)
+  f3.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/reproduction-seeds.csv")
+  f3.db <- read.csv(text = f3.db.text)
+  f4.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/establishment.csv")
+  f4.db <- read.csv(text = f4.db.text)
+  f5.db.text <- getURL("https://github.com/davilahg/ma-populationdynamics/blob/master/understory.csv")
+  f5.db <- read.csv(text = f5.db.text)
  }
 # definitions
 {
@@ -52,10 +69,12 @@ library(fields)
  lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), g.db) # growth: g
  glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), f1.db, binomial) # reproduction probability: f1
  gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = f2.db) # fruit number per individual: f2
- glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), f3.db, poisson) # seed number per fruit: f3
+ f3.db$Plot <- as.factor(as.character(f3.db$Plot))
+ glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| Plot), f3.db, poisson) # seed number per fruit: f3
  den.f5 <- density(x = f5.db$h1, n = m, na.rm = TRUE, from = min(f5.db$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
+ den.f5$y[74:100] <- 0 # no probability of individuals higher than 3.2 m (maximum observed height of understory)
  den.f5$y <- den.f5$y/sum(den.f5$y)
- # gam.f4
+# gam.f4
  {
 	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # get ages with register in understory data
 	stb.n <- as.data.frame(table(f4.db$Age)) # get number of recruits per year
@@ -174,22 +193,19 @@ library(fields)
 
 # creating kernel
 {
- k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
- s.i.a <- S
- f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
- for (a in 1:Age.mature)
-  f.i.a[, a] <- F1[, a]*F2[, a]*F3[, a]*F4[a]
- for (a in 1:Age.mature)
+k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+s.i.a <- S
+f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+for (a in 1:Age.mature) {
   for (i in 1:m) {
-   s.i.j.a[a, i, ] <- s.i.a[i, a]
-   g.i.j.a[a, , ] <- G[a, , ]
-   p.i.j.a[a, i, ] <- p.i <- s.i.j.a[a, i, ]*G[a, i, ]
-   f.i.j.a[a, i, ] <- f.i.a[i, a]
-   F5.i.j.a[a, i, ] <- F5
-   f.i <- f.i.a[i, ]*F5
-   f.i.j.a[a, i, ] <- f.i.j.a[a, i, ]*F5
-   k.i.j.a[a, i, ] <- p.i+f.i
+   f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+   for (j in 1:m) {
+    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+   }
   }
+ }
 # kernel plots
 k.ages <- c(1,10,20,30,40,50,60,80,100)
 zlim.k = c(0, max(k.i.j.a[,,]))
@@ -249,19 +265,18 @@ dev.off()
 	n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
 	n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
 	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-	init.n.a.v <- n.0.v # renameF vector
+	init.n.a.v <- n.0.v # rename vector
 	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
-	n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
+	n.list <- c() # create population size vector & setting first value
 	for (a in 1:Age.mature) {
-		 n.a.v <- k.i.j.a[a,,]%*%init.n.a.v # get kernel for first value (year)
-		 lam.a <- sum(n.a.v)/sum(init.n.a.v) # get lambda for first year
-		 size.v.a.NM[[a]] <- init.n.a.v 
-		 init.n.a.v <- n.a.v # rename initial vector to start again
-		 n.list <- c(n.list, sum(n.a.v)) # add next population size value to vector
-		 lam.list <- c(lam.list, lam.a) # add next lambda value to vector
-		 }
-		tot.lam.pred <- lam.list # lam.list is the transitory lambda vector
-		lam.list.NM <- lam.list # set lambda list with no migration
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+       		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+       		size.v.a.NM[[a]] <- n.a.v
+        	n.list <- c(n.list, sum(n.a.v))
+       		lam.list <- c(lam.list, lam.a)
+       		init.n.a.v <- n.a.v			# add size structure
+		}
+		tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
 } 
 # total observed lambda
 {
@@ -428,6 +443,7 @@ dev.off()
 		cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
 	        }
   	  return(dist.l)
+  }
  } 
  # Try different estimators
  {
@@ -444,7 +460,7 @@ dev.off()
 # total, no migration
 {
      lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
-     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Edad sucesional (años)", ylab = expression(italic(r))) +
+     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
      	scale_fill_discrete(guide=FALSE) +
      	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
      	lambda.edad + 
@@ -483,22 +499,23 @@ dev.off()
 		}
  # calculate new lambda list considering migration
  {
-     	lam.list <- c()
-     	n.0 <- which(s1.db$Age == 0)
-     	n.0.h <- log(s1.db[n.0,]$h2)
+     	lam.list <- c()			# create lambda vector
+     	n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+     	n.0.h <- log(s1.db[n.0,]$h2)	#
      	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-     	init.n.a.v <- n.0.v
+     	init.n.a.v <- n.0.v+c*F5
 	size.v.a.WM <- list(NA) # size structure vector by year, WM = with migration
-     	n.list <- c(sum(init.n.a.v))
+     	n.list <- c()
      	for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-		size.v.a.WM[[a]] <- init.n.a.v
-       		lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v) # add c individuals
-       		init.n.a.v <- n.a.v+c*F5		# add size structure
-       		n.list <- c(n.list, sum(n.a.v))
+       		n.a.v <- n.a.v+c*F5
+       		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+       		size.v.a.WM[[a]] <- n.a.v
+        	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
+       		init.n.a.v <- n.a.v			# add size structure
        		}
-      	tot.lam.pred <- lam.list
+            	tot.lam.pred <- lam.list
 	lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
    	lambda.df.2 <- transform(lambda.df, plot = as.factor("total"))
    } 
@@ -519,22 +536,26 @@ dev.off()
 {
 	pop.size.NM <- c()
 	pop.size.WM <- c()
-	size.v.a.NM.s <- list(NA)
-	size.v.a.WM.s <- list(NA)
+	size.v.a.NM.s <- list(NA) # size structure vector by age, NO MIGRATION, standardized
+	size.v.a.WM.s <- list(NA) # size structure vector by age, WITH MIGRATION, standardized
 	for (a in 1:Age.mature) {
-		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))		# get population size 
+		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))			# get population size 
 		size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
-	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration") # plot population size
-	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration")
-	size.str.mat.NM <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)
-	size.str.mat.WM <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
-	zlim = max(max(size.str.mat.NM), max(size.str.mat.WM))
-	hist3D(y = exp(x.pred), x = (1:Age.mature), z = size.str.mat.NM, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0,zlim), theta = -90)	
-	hist3D(y = exp(x.pred), x = (1:Age.mature), z = size.str.mat.WM, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim), theta = -90)
-}
+	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
+	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
+	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
+	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
+	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
+	       ,theta = -90
+	       )	
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
+	       ,theta = -90
+	       )
+
 
 # esto ya no está limpio
 
