@@ -119,7 +119,7 @@ for (p in 1:nplot) {
            k.p.list[[p]] <- k.i.j.a
           }
          }
-         save(k.p.list, file = "kernel-plot-list.RData")
+save(k.p.list, file = "kernel-plot-list.RData")
          
       
       
