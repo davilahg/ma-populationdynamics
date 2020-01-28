@@ -285,7 +285,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  	   N.0 <- subset(N.0, sup == 1)			# filtering to obtain only alive trees
  	   N.init <- nrow(N.0)				# get number of alive trees in first year
  	   N.list <- c(N.init)				# create a new list of observed population sizes and setting first value
- 	   for (i in 1:Age.mature) {			
+ 	   for (i in 1:(Age.mature-1)) {			
  		   ns.i <- subset(s1.db, Age == i)	# create a set of trees in year a, starting from a = 1
  		   ns.i <- subset(ns.i, sup == 1)	# filtering to get only alive trees
  		   N.ns.i <- nrow(ns.i)			# counting trees
@@ -315,12 +315,13 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
      	lam.m.list <- c(lam.m.list,lam.j)		# add lambda to list
      	init.n.mat <- N.mat.list[j]			# reset initial population size
      }
+     N.list[100] <- round(mean(N.mat.list))
      lam.mature <- geoMean(lam.m.list)			# apply geometric mean to get mature forest lambda
      ob.lam.list <- c(ob.lam.list, lam.mature)		# add observed lambda in mature forest to the whole succession list
-     ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature+1)) # create database for observed lambdas
+     ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature)) # create database for observed lambdas
      names(ob.lam.df) <- c("Age", "ob.lambda")		# naming database
-     ob.lam.df$Age <- 1:(Age.mature+1)			# set age range
-     ob.lam.df$ob.lambda[1:(Age.mature+1)] <- ob.lam.list # set observed lambda value
+     ob.lam.df$Age <- Age.pred			# set age range
+     ob.lam.df$ob.lambda[Age.pred] <- ob.lam.list # set observed lambda value
      lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plotting
 }
 # predicted lambda by plot
@@ -413,7 +414,43 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
       			}
  	   	       }
  }
-# estimating inmigration
+# migration estimating function (for lambda)
+{
+ ob.lam.df					# dataframe containing observed lambda values from Age 0 to mature forest
+ ob.N.df <- data.frame(Age.pred,N.list)
+ names(ob.N.df) <- c("Age", "ob.N")
+	
+	lambda.obs <- obs.lam.plot
+  lambda.est <- est.lam.list
+  distance.l <- function(c) {
+  	  dist.l <- 0
+  	  lam.est <- c()
+	  for (p in 1:nplot)
+		if (p != 5) {
+		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
+		    S.p <- droplevels(S.p)
+		    min.a <- min(S.p$Age)
+		    max.a <- max(S.p$Age)
+		    n.1 <- which(S.p$Age == min.a)
+		    n.1.h <- log(S.p[n.1,]$h2)
+		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
+		    init.n.a.v <- n.1.v+c*F5
+		    for (a in (min.a+1):max.a) {
+			n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
+			lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
+			init.n.a.v <- n.a.v+c*F5
+			lam.est <- c(lam.est, lam.a)
+		    }
+		    lambda.obs.plot <- rep(NA, nrow(lambda.obs[[p]]))
+		    for (j in (1:nrow(lambda.obs[[p]])))
+			dist.l <- dist.l + (lam.est[j]-lambda.obs[[p]]$lambda[j])^2
+		dist.l <- sqrt(dist.l)
+		cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
+	        }
+  	  return(dist.l)
+  }
+ } 
+# migration estimating function (for population size)
 {
   lambda.obs <- obs.lam.plot
   lambda.est <- est.lam.list
@@ -444,15 +481,14 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	        }
   	  return(dist.l)
   }
- } 
  # Try different estimators
  {
     opt.brent <- optim(0, distance.l, method = "Brent", lower = 0, upper = 100)
-    opt.brent$par # 10.79303, dist = 1.702837
+    opt.brent$par # c = 99.9999984997512, dist = 1.66347443150397
     opt.lbf <- optim(0, distance.l, method = "L-BFGS-B")
-    c <- opt.lbf$par # 10.79292, dist = 1.702837
+    c <- opt.lbf$par # c = 12874406.3739112, dist = 1.64488301644323
     opt.bfgs <- optim(0, distance.l, method = "BFGS")
-    opt.bfgs$par # 10.64919, dist = 1.702837
+    opt.bfgs$par # c = 107.855395192696, dist = 1.6624449703873
  }
 }
 
@@ -518,7 +554,6 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
             	tot.lam.pred <- lam.list
 	lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
    	lambda.df.2 <- transform(lambda.df, plot = as.factor("total"))
-   } 
 
 	plot.l.graf.c <- ggplot(lambda.df.2, aes(x = Age, y = lambda)) +
 				theme_minimal() +
