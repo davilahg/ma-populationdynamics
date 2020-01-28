@@ -12,7 +12,18 @@ library(plotly)
 library(gridExtra)
 library(plot3D)
 library(RCurl)
-# read data
+# read data within downloaded directory
+{
+  s.db <- read.csv("./Data/survival.csv") # survival with estimated h1
+  s1.db <- read.csv("./Data/survival-1.csv") # survival without estimated h1
+  g.db <- read.csv("./Data/growth.csv")
+  f1.db <- read.csv("./Data/reproduction-probability.csv")
+  f2.db <- read.csv("./Data/reproduction-fruits.csv")
+  f3.db <- read.csv("./Data/reproduction-seeds.csv")
+  f4.db <- read.csv("./Data/establishment.csv")
+  f5.db <- read.csv("./Data/understory.csv")
+}
+# read data without downloaded directory
 {
   s.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/survival.csv")
   s.db <- read.csv(text = s.db.text) # survival with estimated h1
@@ -57,7 +68,8 @@ library(RCurl)
  lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), g.db) # growth: g
  glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), f1.db, binomial) # reproduction probability: f1
  gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = f2.db) # fruit number per individual: f2
- glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| plot), f3.db, poisson) # seed number per fruit: f3
+ f3.db$Plot <- as.factor(as.character(f3.db$Plot))
+ glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| Plot), f3.db, poisson) # seed number per fruit: f3
  den.f5 <- density(x = f5.db$h1, n = m, na.rm = TRUE, from = min(f5.db$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
  den.f5$y[74:100] <- 0 # no probability of individuals higher than 3.2 m (maximum observed height of understory)
  den.f5$y <- den.f5$y/sum(den.f5$y)
