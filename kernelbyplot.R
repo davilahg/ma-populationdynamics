@@ -48,7 +48,7 @@ for (p in 1:nplot) {
           FF1 <- matrix(NA, ncol = max.a-min.a, nrow = M)
           for (a in (min.a+1):max.a) {
             if (all(p != as.integer(f1.db$plot))) {
-              FF3[ ,a-min.a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+              FF1[ ,a-min.a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
               } else {
                 FF1[ ,a-min.a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M), plot = rep(as.factor(p), M)), re.form = NULL)
               }  
