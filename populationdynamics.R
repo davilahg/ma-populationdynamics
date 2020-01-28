@@ -209,7 +209,7 @@ for (a in 1:Age.mature) {
 # kernel plots
 k.ages <- c(1,10,20,30,40,50,60,80,100)
 zlim.k = c(0, max(k.i.j.a[,,]))
-png(filename="kernel.atesis.png",width=8,height=8,units="in",res=150)
+#png(filename="kernel.atesis.png",width=8,height=8,units="in",res=150)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if ( a != 100) {
@@ -224,13 +224,13 @@ mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #dev.off()
 # growth plots
 zlim.g = c(0, max(g.i.j.a[,,]))
-png(filename="G.a-tesis.png",width=8,height=8,units="in",res=150)
+#png(filename="G.a-tesis.png",width=8,height=8,units="in",res=150)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if (a != 100) {
-		image(ex.pr, ex.pr, g.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
+		image(ex.pr, ex.pr, G[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
 	 } else {
-		image(ex.pr, ex.pr, g.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = "Mature forest")
+		image(ex.pr, ex.pr, G[a,,], zlim = zlim.k, xlab = "", ylab = "", main = "Mature forest")
 	 } 
 	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
@@ -239,7 +239,7 @@ mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #dev.off()
 # p(x,y,t) = g(x,y,t)*s(x,t)
 zlim.p = c(0, max(p.i.j.a[,,]))
-png(filename="P.a.png",width=8,height=8,units="in",res=150)
+#png(filename="P.a.png",width=8,height=8,units="in",res=150)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if (a != 100) {
@@ -254,10 +254,10 @@ mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #dev.off()
 # fecundity
 zlim.f = c(0, max(f.i.a[,]))
-png(filename="F.a.png",width=4,height=4,units="in",res=150)
+#png(filename="F.a.png",width=4,height=4,units="in",res=150)
 image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = "")
 #image.plot(legend.only=TRUE, zlim= zlim.f, col =  heat.colors(12),horizontal = F)
-dev.off()
+#dev.off()
 }
 # total predicted lambda
 {
@@ -325,7 +325,7 @@ dev.off()
 }
 # predicted lambda by plot
 {   
-     load("./Data/k-p-list.RData")						# read list of kernels calculated by plot: poner link del código?
+     load("./Data/kernel-plot-list.RData")					# read list of kernels calculated by plot: poner link del código?
      s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))		# transform plot variable to factor
      nplot <- nlevels(s1.db$PLOT)						# get number of plots
      est.lam.df <- as.data.frame(matrix(nrow = Age.mature, ncol = nplot, NA))	# create new database for estimated lambda values
@@ -555,7 +555,7 @@ dev.off()
 	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
 	       ,theta = -90
 	       )
-
+}
 
 # esto ya no está limpio
 
