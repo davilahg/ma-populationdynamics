@@ -1,7 +1,3 @@
-Seeds.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/nseeds.csv")
-Seeds <- read.csv(text = Seeds.text)
-s1.db.text <- getURL("https://raw.githubusercontent.com/davilahg/ma-populationdynamics/master/survival-1.csv")
-s1.db <- read.csv(text = s1.db.text) # survival with estimated h1
 nplot <- nlevels(as.factor(as.character(s1.db$plot)))
 k.p.list <- list()
 mat.p <- 5 # mature plot
@@ -47,13 +43,14 @@ for (p in 1:nplot) {
               init.s <- init.s + sM
             }
           }
+          S <- MUS
           # Reproduction probability
           FF1 <- matrix(NA, ncol = max.a-min.a, nrow = M)
           for (a in (min.a+1):max.a) {
-            if (all(p != as.integer(Seeds$plot))) {
+            if (all(p != as.integer(f1.db$plot))) {
               FF3[ ,a-min.a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
               } else {
-                FF3[ ,a-min.a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M), plot = rep(as.factor(p), M)), re.form = NULL)
+                FF1[ ,a-min.a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M), plot = rep(as.factor(p), M)), re.form = NULL)
               }  
           }
           MUF1 <- matrix(NA, ncol = max.a-min.a, nrow = m)
@@ -64,10 +61,11 @@ for (p in 1:nplot) {
               init.f1 <- init.f1 + sM
             }
           }
+          F1 <- MUF1
           # Fruitset by individual
           FF2 <- matrix(NA, ncol = max.a-min.a, nrow = M)
           for (a in (min.a+1):max.a) {
-            if (all(p != as.integer(Seeds$plot))) {
+            if (all(p != as.integer(f2.db$plot))) {
               FF2[ ,a-min.a] <- predict(gam.f2$gam, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
               } else {
                 FF2[ ,a-min.a] <- predict(gam.f2$gam, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M), plot = rep(as.factor(p), M)), re.form = NULL)
@@ -81,13 +79,14 @@ for (p in 1:nplot) {
               init.f2 <- init.f2 + sM
             }
           }
+          F2 <- MUF2
           # Seed number by fruit
           FF3 <- matrix(NA, ncol = max.a-min.a, nrow = M)
           for (a in (min.a+1):max.a) {
-            if (all(p != as.integer(Seeds$plot))) {
+            if (all(p != f3.db$Plot)) {
               FF3[ ,a-min.a] <- predict(glmm.f3, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
               } else {
-                FF3[ ,a-min.a] <- predict(glmm.f3, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M), plot = rep(as.factor(p), M)), re.form = NULL)
+                FF3[ ,a-min.a] <- predict(glmm.f3, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M), Plot = rep(as.factor(p), M)), re.form = NULL)
               }  
           }
           MUF3 <- matrix(NA, ncol = max.a-min.a, nrow = m)
@@ -98,20 +97,22 @@ for (p in 1:nplot) {
               init.f3 <- init.f3 + sM
             }
           }
+          F3 <- MUF3
           # establishment probability
           F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
           # recruit size
           F5 <- den.f5$y
-          k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+          # kernel
+          k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(max.a-min.a, m, m)) 
           s.i.a <- MUS
-          f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-          for (a in 1:Age.mature) {
+          f.i.a <- matrix(NA, nrow = m, ncol = max.a-min.a)
+          for (a in (min.a+1):max.a) {
             for (i in 1:m) {
-             f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+             f.i.a[i, a-min.a] <- F1[i, a-min.a]*F2[i, a-min.a]*F3[i, a-min.a]*F4[i]
              for (j in 1:m) {
-              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+              p.i.j.a[a-min.a, j, i] <- s.i.a[i, a-min.a]*G[a-min.a, j, i]
+              f.i.j.a[a-min.a, j, i] <- f.i.a[i, a-min.a]*F5[j]
+              k.i.j.a[a-min.a, j, i] <- p.i.j.a[a-min.a, j, i]+f.i.j.a[a-min.a, j, i]
              }
             }
            }
