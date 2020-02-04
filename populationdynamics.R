@@ -415,12 +415,11 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  	   	       }
  }
 # migration estimating function (for lambda)
-{
- ob.lam.df					# dataframe containing observed lambda values from Age 0 to mature forest
+{				
  ob.N.df <- data.frame(Age.pred,N.list)
  names(ob.N.df) <- c("Age", "ob.N")
 	
-	lambda.obs <- obs.lam.plot
+  lambda.obs <- obs.lam.plot
   lambda.est <- est.lam.list
   distance.l <- function(c) {
   	  dist.l <- 0
@@ -452,40 +451,42 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  } 
 # migration estimating function (for population size)
 {
-  lambda.obs <- obs.lam.plot
-  lambda.est <- est.lam.list
-  distance.l <- function(c) {
-  	  dist.l <- 0
-  	  lam.est <- c()
+  ob.N.df <- data.frame(Age.pred,N.list)
+  names(ob.N.df) <- c("Age", "ob.N")
+  distance.N <- function(c) {
+  	  dist.N <- 0
 	  for (p in 1:nplot)
 		if (p != 5) {
 		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
+		    if (p == 8)
+			    S.p <- subset(S.p, Age != 0)
 		    S.p <- droplevels(S.p)
 		    min.a <- min(S.p$Age)
 		    max.a <- max(S.p$Age)
+		    age.pred.p <- min.a:max.a
 		    n.1 <- which(S.p$Age == min.a)
 		    n.1.h <- log(S.p[n.1,]$h2)
 		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
 		    init.n.a.v <- n.1.v+c*F5
-		    for (a in (min.a+1):max.a) {
-			n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
-			lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
+		    N.p <- data.frame(Age = age.pred.p, N = rep(NA, length(age.pred.p)))
+		    for (a in (min.a+1):(max.a+1)) {
+			N.p$N[a-min.a] <- sum(init.n.a.v)
+			n.a.v <- k.i.j.a[a-min.a,,]%*%init.n.a.v
 			init.n.a.v <- n.a.v+c*F5
-			lam.est <- c(lam.est, lam.a)
 		    }
-		    lambda.obs.plot <- rep(NA, nrow(lambda.obs[[p]]))
-		    for (j in (1:nrow(lambda.obs[[p]])))
-			dist.l <- dist.l + (lam.est[j]-lambda.obs[[p]]$lambda[j])^2
-		dist.l <- sqrt(dist.l)
-		cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
+	            for (j in 1:nrow(N.p))
+		    	dist.N <- dist.N + (N.p$N[j]-ob.N.df$ob.N[max.a-nrow(N.p)+j])^2
+		    dist.N <- sqrt(dist.N)
+		    cat(paste0("c = ", c, ", p = ", p, ", dist = ", dist.N, "\n"))
 	        }
-  	  return(dist.l)
+  	        return(dist.N)
   }
+}
  # Try different estimators
  {
-    opt.brent <- optim(0, distance.l, method = "Brent", lower = 0, upper = 100)
+    opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
     opt.brent$par # c = 99.9999984997512, dist = 1.66347443150397
-    opt.lbf <- optim(0, distance.l, method = "L-BFGS-B")
+    opt.lbf <- optim(0, distance.N, method = "L-BFGS-B")
     c <- opt.lbf$par # c = 12874406.3739112, dist = 1.64488301644323
     opt.bfgs <- optim(0, distance.l, method = "BFGS")
     opt.bfgs$par # c = 107.855395192696, dist = 1.6624449703873
