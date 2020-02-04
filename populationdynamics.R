@@ -414,41 +414,6 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
       			}
  	   	       }
  }
-# migration estimating function (for lambda)
-{				
- ob.N.df <- data.frame(Age.pred,N.list)
- names(ob.N.df) <- c("Age", "ob.N")
-	
-  lambda.obs <- obs.lam.plot
-  lambda.est <- est.lam.list
-  distance.l <- function(c) {
-  	  dist.l <- 0
-  	  lam.est <- c()
-	  for (p in 1:nplot)
-		if (p != 5) {
-		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
-		    S.p <- droplevels(S.p)
-		    min.a <- min(S.p$Age)
-		    max.a <- max(S.p$Age)
-		    n.1 <- which(S.p$Age == min.a)
-		    n.1.h <- log(S.p[n.1,]$h2)
-		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
-		    init.n.a.v <- n.1.v+c*F5
-		    for (a in (min.a+1):max.a) {
-			n.a.v <- k.p.list[[p]][(a-min.a),,]%*%init.n.a.v
-			lam.a <- (sum(n.a.v)+c)/sum(init.n.a.v)
-			init.n.a.v <- n.a.v+c*F5
-			lam.est <- c(lam.est, lam.a)
-		    }
-		    lambda.obs.plot <- rep(NA, nrow(lambda.obs[[p]]))
-		    for (j in (1:nrow(lambda.obs[[p]])))
-			dist.l <- dist.l + (lam.est[j]-lambda.obs[[p]]$lambda[j])^2
-		dist.l <- sqrt(dist.l)
-		cat(paste0("c = ", c, ", dist = ", dist.l, "\n"))
-	        }
-  	  return(dist.l)
-  }
- } 
 # migration estimating function (for population size)
 {
   ob.N.df <- data.frame(Age.pred,N.list)
@@ -486,14 +451,58 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
   	        return(dist.N)
   }
 }
- # Try different estimators
+# migration estimating function (for lambda)
+{
+  distance.L <- function(c) {
+  	  dist.L <- c()
+	  for (p in 1:nplot) {
+		if (p != 5) {
+		    dist.L.p <- 0
+		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
+		    if (p == 8)
+			    S.p <- subset(S.p, Age != 0)
+		    S.p <- droplevels(S.p)
+		    min.a <- min(S.p$Age)
+		    max.a <- max(S.p$Age)
+		    age.pred.p <- min.a:max.a
+		    n.1 <- which(S.p$Age == min.a)
+		    n.1.h <- log(S.p[n.1,]$h2)
+		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
+		    init.n.a.v <- n.1.v+c*F5
+		    L.p <- data.frame(Age = age.pred.p, L = rep(NA, length(age.pred.p)))
+		    for (a in (min.a+1):(max.a+1)) {
+			n.a.v <- k.i.j.a[a-min.a,,]%*%init.n.a.v
+			L.p$L[a-min.a] <- sum(n.a.v)/sum(init.n.a.v)
+			init.n.a.v <- n.a.v+c*F5
+		    }
+	            for (j in 1:nrow(L.p))
+		    	dist.L.p <- dist.L.p + (L.p$L[j]-lambda.df$lambda[max.a-nrow(L.p)+j])^2
+		    dist.L.p <- sqrt(dist.L.p)
+	         }
+		dist.L <- c(dist.L, dist.L.p)
+		}
+	        dist.L <- mean(dist.L)
+	        cat(paste0("c = ", c, ", dist = ", dist.L, "\n"))
+  	        return(dist.L)
+  }
+}
+ # Try different estimators (for population size)
  {
     opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
-    opt.brent$par # c = 99.9999984997512, dist = 1.66347443150397
+    opt.brent$par # c = 11.2793256096294, dist = 505.316246521528
     opt.lbf <- optim(0, distance.N, method = "L-BFGS-B")
-    c <- opt.lbf$par # c = 12874406.3739112, dist = 1.64488301644323
-    opt.bfgs <- optim(0, distance.l, method = "BFGS")
-    opt.bfgs$par # c = 107.855395192696, dist = 1.6624449703873
+    c <- opt.lbf$par # c = 11.2783251927428, dist = 505.316246635523
+    opt.bfgs <- optim(0, distance.N, method = "BFGS")
+    opt.bfgs$par # c = 11.2793251956266, dist = 505.316246521528
+ }
+# Try different estimators (for lambda)
+ {
+    opt.brent <- optim(0, distance.L, method = "Brent", lower = 0, upper = 100000000)
+    opt.brent$par # c = 99999997.5763436, dist = 0.359932702161634
+    opt.lbf <- optim(0, distance.L, method = "L-BFGS-B")
+    c <- opt.lbf$par # c = 5738283.68434211, dist = 0.359932905786081
+    opt.bfgs <- optim(0, distance.L, method = "BFGS")
+    opt.bfgs$par # c = 0.034621839080264, dist = 0.741193717973914
  }
 }
 
@@ -521,10 +530,11 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  	 }
  	 p.lam.ob <- ggplot(p.lam.p.2, aes(x = Age, y = lambda, alpha = 1/2), show.legend = FALSE) + 
  	 theme_minimal() +
- 	 geom_line(size = 1) + 
+ 	 geom_point(size = 1) + 
      	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
- 	 geom_line(data = lambda.df.2.NM, aes(x = Age, y = lambda), col = "red", size = 2, alpha = 1/3, show.legend = FALSE) +
- 	 labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
+ 	 geom_line(data = lambda.df.NM, aes(x = Age, y = lambda), col = "red", size = 2, alpha = 1/3, show.legend = FALSE) +
+ 	 geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
+	 labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
  	 scale_alpha(guide = "none") +
 	 scale_y_continuous(limits = c(0, 5.8))
  	 p.lam.ob
@@ -566,8 +576,9 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 				ylab(expression(lambda)) +
 				theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
 				geom_line(size = 2, alpha = 1/3, col = "red") + 
-				geom_line(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
-				scale_alpha(guide = "none") +
+				geom_point(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
+				geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
+	 			scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
 	#ggsave("with-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
