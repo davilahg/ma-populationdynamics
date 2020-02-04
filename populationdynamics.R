@@ -454,9 +454,10 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
   ob.N.df <- data.frame(Age.pred,N.list)
   names(ob.N.df) <- c("Age", "ob.N")
   distance.N <- function(c) {
-  	  dist.N <- 0
-	  for (p in 1:nplot)
+  	  dist.N <- c()
+	  for (p in 1:nplot) {
 		if (p != 5) {
+		    dist.N.p <- 0
 		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
 		    if (p == 8)
 			    S.p <- subset(S.p, Age != 0)
@@ -475,10 +476,13 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 			init.n.a.v <- n.a.v+c*F5
 		    }
 	            for (j in 1:nrow(N.p))
-		    	dist.N <- dist.N + (N.p$N[j]-ob.N.df$ob.N[max.a-nrow(N.p)+j])^2
-		    dist.N <- sqrt(dist.N)
-		    cat(paste0("c = ", c, ", p = ", p, ", dist = ", dist.N, "\n"))
-	        }
+		    	dist.N.p <- dist.N.p + (N.p$N[j]-ob.N.df$ob.N[max.a-nrow(N.p)+j])^2
+		    dist.N.p <- sqrt(dist.N.p)
+	         }
+		dist.N <- c(dist.N, dist.N.p)
+		}
+	        dist.N <- mean(dist.N)
+	        cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
   	        return(dist.N)
   }
 }
