@@ -277,7 +277,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
        		init.n.a.v <- n.a.v			# add size structure
 		}
 	tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
-	N.pred <- data.frame(N = n.list, Age = Age.pred)
+	prd.N.total <- data.frame(N = n.list, Age = Age.pred)
 } 
 # total observed lambda
 {
@@ -389,9 +389,9 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		     n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get tree hight and order
 		     init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # count trees in each size class and set a population structure vector
 		     for (a in ((min.a+1):max.a)) {				# for each age in plot subset:
-			  n.a.db <- droplevels(subset(Mim.s.p, Age == a))	# drop levels
+			  n.a.db <- droplevels(subset(Mim.s.p, Age == a-1))	# drop levels
 			  n.a.v.i <- nlevels(n.a.db$id)				# count trees
-			  n.list.p <- c(n.list.p, sum(n.a.v.i))
+			  n.list.p <- c(n.list.p, n.a.v.i)
 			  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)			# get lambda
 			  init.n.a.v.i <- n.a.v.i				# reset initial n
 			  lam.list <- c(lam.list, lam.a.i)			# add lambda to list
@@ -412,7 +412,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
         		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)] # set lambda values
         		obs.lam.plot[[i]] <- plot.l.i 				# add lambda matrix to list
 			plot.n.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.N.list[,i]) == TRUE)), ncol = 2)) # create new database: cols = 2 & rows = number of not NA in list
-        		names(plot.N.i) <- c("Age", "N")			# set names
+        		names(plot.n.i) <- c("Age", "N")			# set names
        			plot.n.i$Age <- which(!is.na(plot.N.list[,i]))	# set valid ages
         		plot.n.i$N <- plot.N.list[,i][which(!is.na(plot.N.list[,i]) == TRUE)] # set lambda values
         		obs.N.plot[[i]] <- plot.n.i 
@@ -424,43 +424,37 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
         		plot.l.5$lambda[1] <- lam.mature			# set lambda as calculated for mature forest above
         		obs.lam.plot[[5]] <- plot.l.5				# set plot number
       			plot.n.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))	# create new database for mature forest
-        		names(plot.l.5) <- c("Age", "N")			# name it
-        		plot.l.5$Age[1] <- Age.mature				# set age as mature
-        		plot.l.5$N[1] <- lam.maturjjjjjshjjikkijukjuhjhhhulated for mature forest above
-        		obs.lam.plot[[5]] <- plot.l.5				# set plot number
+        		names(plot.n.5) <- c("Age", "N")			# name it
+        		plot.n.5$Age[1] <- Age.mature				# set age as mature
+        		plot.n.5$N[1] <- N.list[100] 				# for mature forest above
+        		obs.N.plot[[5]] <- plot.n.5				# set plot number
 			}
  	   	       }
  }
 # migration estimating function (for population size)
 {
-  ob.N.df <- data.frame(Age.pred,N.list)
-  names(ob.N.df) <- c("Age", "ob.N")
+  obs.N.total <- data.frame(Age.pred,N.list)
+  names(obs.N.total) <- c("Age", "N")
   distance.N <- function(c) {
   	  dist.N <- c()
+	  n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+     	  n.0.h <- log(s1.db[n.0,]$h2)	#
+     	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+     	  init.n.a.v <- n.0.v+c*F5
+	  pred.N.total <- c() # size structure vector by year, WM = with migration
+     	  for (a in 1:Age.mature) {
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+       		n.a.v <- n.a.v+c*F5
+        	pred.N.total <- c(pred.N.total, sum(n.a.v))
+       		init.n.a.v <- n.a.v			# add size structure
+       		}
 	  for (p in 1:nplot) {
-		if (p != 5) {
-		    dist.N.p <- 0
-		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
-		    if (p == 8)
-			    S.p <- subset(S.p, Age != 0)
-		    S.p <- droplevels(S.p)
-		    min.a <- min(S.p$Age)
-		    max.a <- max(S.p$Age)
-		    age.pred.p <- min.a:max.a
-		    n.1 <- which(S.p$Age == min.a)
-		    n.1.h <- log(S.p[n.1,]$h2)
-		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
-		    init.n.a.v <- n.1.v+c*F5
-		    N.p <- data.frame(Age = age.pred.p, N = rep(NA, length(age.pred.p)))
-		    for (a in (min.a+1):(max.a+1)) {
-			N.p$N[a-min.a] <- sum(init.n.a.v)
-			n.a.v <- k.i.j.a[a-min.a,,]%*%init.n.a.v
-			init.n.a.v <- n.a.v+c*F5
-		    }
-	            for (j in 1:nrow(N.p))
-		    	dist.N.p <- dist.N.p + (N.p$N[j]-ob.N.df$ob.N[max.a-nrow(N.p)+j])^2
-		    dist.N.p <- sqrt(dist.N.p)
-	         }
+		dist.N.p <- 0
+		N.p <- obs.N.plot[[p]]
+		max.a <- max(N.p$Age)
+	        for (j in 1:nrow(N.p))
+			dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
+		dist.N.p <- sqrt(dist.N.p)
 		dist.N <- c(dist.N, dist.N.p)
 		}
 	        dist.N <- mean(dist.N)
@@ -470,32 +464,27 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 }
 # migration estimating function (for lambda)
 {
-  distance.L <- function(c) {
+ distance.L <- function(c) {
   	  dist.L <- c()
+	  n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+     	  n.0.h <- log(s1.db[n.0,]$h2)	#
+     	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+     	  init.n.a.v <- n.0.v+c*F5
+	  pred.L.total <- c() # size structure vector by year, WM = with migration
+     	  for (a in 1:Age.mature) {
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+       		n.a.v <- n.a.v+c*F5
+		lam.p <- sum(n.a.v)/sum(init.n.a.v)
+        	pred.L.total <- c(pred.L.total, lam.p)
+       		init.n.a.v <- n.a.v			# add size structure
+       		}
 	  for (p in 1:nplot) {
-		if (p != 5) {
-		    dist.L.p <- 0
-		    S.p <- subset(s1.db, plot == p & !is.na(ln.h2))
-		    if (p == 8)
-			    S.p <- subset(S.p, Age != 0)
-		    S.p <- droplevels(S.p)
-		    min.a <- min(S.p$Age)
-		    max.a <- max(S.p$Age)
-		    age.pred.p <- min.a:max.a
-		    n.1 <- which(S.p$Age == min.a)
-		    n.1.h <- log(S.p[n.1,]$h2)
-		    n.1.v <- hist(n.1.h, breaks = e.pred, plot = FALSE)$counts
-		    init.n.a.v <- n.1.v+c*F5
-		    L.p <- data.frame(Age = age.pred.p, L = rep(NA, length(age.pred.p)))
-		    for (a in (min.a+1):(max.a+1)) {
-			n.a.v <- k.i.j.a[a-min.a,,]%*%init.n.a.v
-			L.p$L[a-min.a] <- sum(n.a.v)/sum(init.n.a.v)
-			init.n.a.v <- n.a.v+c*F5
-		    }
-	            for (j in 1:nrow(L.p))
-		    	dist.L.p <- dist.L.p + (L.p$L[j]-lambda.df$lambda[max.a-nrow(L.p)+j])^2
-		    dist.L.p <- sqrt(dist.L.p)
-	         }
+		dist.L.p <- 0
+		L.p <- obs.lam.plot[[p]]
+		max.a <- max(L.p$Age)
+	        for (j in 1:nrow(L.p))
+			dist.L.p <- dist.L.p + (L.p$lambda[j]-pred.L.total[max.a-nrow(L.p)+j])^2
+		dist.L.p <- sqrt(dist.L.p)
 		dist.L <- c(dist.L, dist.L.p)
 		}
 	        dist.L <- mean(dist.L)
@@ -506,20 +495,20 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  # Try different estimators (for population size)
  {
     opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
-    opt.brent$par # c = 11.2793256096294, dist = 505.316246521528
+    opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
     opt.lbf <- optim(0, distance.N, method = "L-BFGS-B")
-    c <- opt.lbf$par # c = 11.2783251927428, dist = 505.316246635523
+    c <- opt.lbf$par # c = 9.35391449733551, dist = 81.8803596331657
     opt.bfgs <- optim(0, distance.N, method = "BFGS")
-    opt.bfgs$par # c = 11.2793251956266, dist = 505.316246521528
+    opt.bfgs$par # c = 9.35491911006061, dist = 81.8803591350612
  }
 # Try different estimators (for lambda)
  {
     opt.brent <- optim(0, distance.L, method = "Brent", lower = 0, upper = 100000000)
-    opt.brent$par # c = 99999997.5763436, dist = 0.359932702161634
+    opt.brent$par # c = 2.47619435505125, dist = 0.530052570070713
     opt.lbf <- optim(0, distance.L, method = "L-BFGS-B")
-    c <- opt.lbf$par # c = 5738283.68434211, dist = 0.359932905786081
+    c <- opt.lbf$par # c = 2.47519458486379, dist = 0.530052570638488
     opt.bfgs <- optim(0, distance.L, method = "BFGS")
-    opt.bfgs$par # c = 0.034621839080264, dist = 0.741193717973914
+    opt.bfgs$par # c = 15.7093246924741, dist = 0.535953969391775
  }
 }
 
