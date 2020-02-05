@@ -276,7 +276,8 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
        		lam.list <- c(lam.list, lam.a)
        		init.n.a.v <- n.a.v			# add size structure
 		}
-		tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
+	tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
+	N.pred <- data.frame(N = n.list, Age = Age.pred)
 } 
 # total observed lambda
 {
@@ -374,11 +375,14 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
            s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))	# transoform plots as factor
      	   plot.lam.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(s1.db$PLOT)), NA)) # create new database for observed lambda list by plot
  	   names(plot.lam.list) <- 1:nplot					# name plot columns
- 	   for (i in levels(s1.db$PLOT)) {					# for every plot:
+     	   plot.N.list <- as.data.frame(matrix(nrow = Age.mature, ncol = length(levels(s1.db$PLOT)), NA)) # create new database for observed lambda list by plot
+	   names(plot.N.list) <- 1:nplot					# name plot columns
+	   for (i in levels(s1.db$PLOT)) {					# for every plot:
   	 	 Mim.s.p <- subset(s1.db, PLOT == i)				# get a subset of the whole database
 		 if (Mim.s.p$PLOT[1] != 5) {					# if plot number is not 5: !!! (tengo que ver por qué, está vacío)		
 		  if (all(!is.na(Mim.s.p$Age))) {				# if subset has all ages registered:
 		     lam.list <- c()						# create a new lambda list
+		     n.list.p <- c()
 		     min.a <- min(Mim.s.p$Age, na.rm = TRUE)			# get maximum age
 		     max.a <- max(Mim.s.p$Age, na.rm = TRUE)			# get minimum age
 		     n.1.i <- which(Mim.s.p$Age == min.a)			# get rows containing trees in year a
@@ -387,23 +391,31 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		     for (a in ((min.a+1):max.a)) {				# for each age in plot subset:
 			  n.a.db <- droplevels(subset(Mim.s.p, Age == a))	# drop levels
 			  n.a.v.i <- nlevels(n.a.db$id)				# count trees
+			  n.list.p <- c(n.list.p, sum(n.a.v.i))
 			  lam.a.i <- n.a.v.i/sum(init.n.a.v.i)			# get lambda
 			  init.n.a.v.i <- n.a.v.i				# reset initial n
 			  lam.list <- c(lam.list, lam.a.i)			# add lambda to list
 		      }
 		     plot.lam.list[(min.a+1):max.a, as.numeric(i)] <- lam.list	# set lambda values and plot
+		     plot.N.list[(min.a+1):max.a, as.numeric(i)] <- n.list.p	# set lambda values and plot
 		}
 	       }
 	   }
 	   nplot <- nlevels(s1.db$PLOT)	
  	   obs.lam.plot <- list(NA)						# create lambda list
- 	   for (i in 1:nplot) {							# for each plot:
+ 	   obs.N.plot <- list(NA)
+	   for (i in 1:nplot) {							# for each plot:
       		if (i != 5) {							# if it is not 5:
         		plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.lam.list[,i]) == TRUE)), ncol = 2)) # create new database: cols = 2 & rows = number of not NA in list
         		names(plot.l.i) <- c("Age", "lambda")			# set names
        			plot.l.i$Age <- which(!is.na(plot.lam.list[,i]))	# set valid ages
         		plot.l.i$lambda <- plot.lam.list[,i][which(!is.na(plot.lam.list[,i]) == TRUE)] # set lambda values
         		obs.lam.plot[[i]] <- plot.l.i 				# add lambda matrix to list
+			plot.n.i <- as.data.frame(matrix(nrow = length(which(!is.na(plot.N.list[,i]) == TRUE)), ncol = 2)) # create new database: cols = 2 & rows = number of not NA in list
+        		names(plot.N.i) <- c("Age", "N")			# set names
+       			plot.n.i$Age <- which(!is.na(plot.N.list[,i]))	# set valid ages
+        		plot.n.i$N <- plot.N.list[,i][which(!is.na(plot.N.list[,i]) == TRUE)] # set lambda values
+        		obs.N.plot[[i]] <- plot.n.i 
 			}							
       		else if (i == 5) {						# if plot is 5:
         		plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))	# create new database for mature forest
@@ -411,7 +423,12 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
         		plot.l.5$Age[1] <- Age.mature				# set age as mature
         		plot.l.5$lambda[1] <- lam.mature			# set lambda as calculated for mature forest above
         		obs.lam.plot[[5]] <- plot.l.5				# set plot number
-      			}
+      			plot.n.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))	# create new database for mature forest
+        		names(plot.l.5) <- c("Age", "N")			# name it
+        		plot.l.5$Age[1] <- Age.mature				# set age as mature
+        		plot.l.5$N[1] <- lam.maturjjjjjshjjikkijukjuhjhhhulated for mature forest above
+        		obs.lam.plot[[5]] <- plot.l.5				# set plot number
+			}
  	   	       }
  }
 # migration estimating function (for population size)
