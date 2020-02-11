@@ -608,24 +608,16 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position="right") + 
 		geom_line(aes(linetype = migration), size = 1)
 	ps.plot
-	ggsave("pop-size.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-     	
-	ps.nm.plot
-	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
-	ps.wm.plot <- qplot(xlab = "Succesional age (years)", ylab = "Projected population size") +
-		theme_minimal() +
-		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none")
-     	ps.nm.plot
-
-	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
-	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
-	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
+	#ggsave("pop-size.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+   	size.v.a.NM.s <- size.v.a.NM.s[-1]
+	size.v.a.WM.s <- size.v.a.WM.s[-1]
+	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)     ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
+	hist3D(x = exp(x.pred), y = Age.pred, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
 	       ,theta = -90
 	       )	
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
+	hist3D(y = exp(x.pred), x = Age.pred, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
 	       ,theta = -90
 	       )
 }
