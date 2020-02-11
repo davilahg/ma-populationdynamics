@@ -600,14 +600,16 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
-	ps.nm.df <- data.frame(Age = Age.pred, N.n pop.size.NM)
-	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
-	ps.nm.plot <- ggplot(
+	ps.df <- data.frame(Age = Age.pred, N.nm = pop.size.NM, N.wm = pop.size.WM)
+	ps.plot <- ggplot(ps.df, aes(x = Age) +
 			theme_minimal() +
-			xlab(expression(paste("Abandonment time ", italic(t), " (years)"))) +
-			ylab(expression(lambda)) +
+			xlab("Succesional age (years)") +
+			ylab("Projected population size") +
 			theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
-		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none")
+			geom_line(data = ps.df, aes(x = Age, y = N.nm), col = "red", size = 2, alpha = 1/3) +
+			geom_line(data = ps.df, aes(x = Age, y = N.wm), col = "blue", size = 2, alpha = 1/3) +
+
+
      	ps.nm.plot
 	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
 	ps.wm.plot <- qplot(xlab = "Succesional age (years)", ylab = "Projected population size") +
