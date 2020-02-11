@@ -517,13 +517,12 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 {
      lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
      lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
-     	scale_fill_discrete(guide=FALSE) +
-     	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
-     	lambda.edad + 
      	theme_minimal() +
-     	theme(legend.position = "none")
+	theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none") + 
+	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
+     	lambda.edad
      lambda.edad
-     #ggsave("lambda-edad.png", lambda.edad, device = "png", width = 9, height = 7, units = "in", dpi = 180*2)
+     #ggsave("lambda-edad.pdf", lambda.edad, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
 # by plot, no migration
  {
@@ -544,7 +543,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  	 scale_alpha(guide = "none") +
 	 scale_y_continuous(limits = c(0, 5.8))
  	 p.lam.ob
- 	 #ggsave("no-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
+ 	 #ggsave("no-migration.pdf", p.lam.ob, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
 # by plot, with migration
 {
@@ -587,7 +586,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	 			scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
-	#ggsave("with-migration.png", p.lam.ob, device = "png", width = 18, height = 12, units = "in", dpi = 180*2)
+	ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
 # size structure change over time
 {
@@ -601,6 +600,21 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
+	ps.nm.df <- data.frame(Age = Age.pred, N.n pop.size.NM)
+	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
+	ps.nm.plot <- ggplot(
+			theme_minimal() +
+			xlab(expression(paste("Abandonment time ", italic(t), " (years)"))) +
+			ylab(expression(lambda)) +
+			theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
+		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none")
+     	ps.nm.plot
+	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
+	ps.wm.plot <- qplot(xlab = "Succesional age (years)", ylab = "Projected population size") +
+		theme_minimal() +
+		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none")
+     	ps.nm.plot
+
 	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
 	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
