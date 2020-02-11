@@ -266,18 +266,18 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
 	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
 	init.n.a.v <- n.0.v # rename vector
-	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
-	n.list <- c() # create population size vector & setting first value
+	size.v.a.NM <- list(n.0.v) # create list for size structure change, NM = no migration
+	n.list <- c(sum(n.0.v)) # create population size vector & setting first value
 	for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
-       		size.v.a.NM[[a]] <- n.a.v
+       		size.v.a.NM[[a+1]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
        		init.n.a.v <- n.a.v			# add size structure
 		}
 	tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
-	prd.N.total <- data.frame(N = n.list, Age = Age.pred)
+	prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
 } 
 # total observed lambda
 {
@@ -554,22 +554,21 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		obs.lam.p  <- rbind(obs.lam.p, obs.lam.p.i)
 		}
  # calculate new lambda list considering migration
- {
      	lam.list <- c()			# create lambda vector
      	n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
      	n.0.h <- log(s1.db[n.0,]$h2)	#
      	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-     	init.n.a.v <- n.0.v+c*F5
-	size.v.a.WM <- list(NA) # size structure vector by year, WM = with migration
-     	n.list <- c()
+     	size.v.a.WM <- list(n.0.v) # size structure vector by year, WM = with migration
+     	n.list <- c(sum(n.0.v))
+	init.n.a.v <- n.0.v+c*F5
      	for (a in 1:Age.mature) {
-       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+       		n.list <- c(n.list, sum(n.a.v))
+		size.v.a.WM[[a+1]] <- n.a.v
+		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		n.a.v <- n.a.v+c*F5
-       		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
-       		size.v.a.WM[[a]] <- n.a.v
-        	n.list <- c(n.list, sum(n.a.v))
+       		lam.a <- sum(n.a.v)/sum(init.n.a.v)
        		lam.list <- c(lam.list, lam.a)
-       		init.n.a.v <- n.a.v			# add size structure
+       		init.n.a.v <- n.a.v		
        		}
         tot.lam.pred <- lam.list
 	lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
@@ -586,31 +585,32 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	 			scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
-	ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	#ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
+
 # size structure change over time
 {
 	pop.size.NM <- c()
 	pop.size.WM <- c()
 	size.v.a.NM.s <- list(NA) # size structure vector by age, NO MIGRATION, standardized
 	size.v.a.WM.s <- list(NA) # size structure vector by age, WITH MIGRATION, standardized
-	for (a in 1:Age.mature) {
+	for (a in 1:(Age.mature+1)) {
 		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))			# get population size 
 		size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
-	ps.df <- data.frame(Age = Age.pred, N.nm = pop.size.NM, N.wm = pop.size.WM)
-	ps.plot <- ggplot(ps.df, aes(x = Age)) +
-			theme_minimal() +
-			xlab("Succesional age (years)") +
-			ylab("Projected population size") +
-			theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
-			geom_line(data = ps.df, aes(x = Age, y = N.nm), col = "red", size = 1, alpha = 1/3) +
-			geom_line(data = ps.df, aes(x = Age, y = N.wm), col = "red", linetype = "dashed", size = 1, alpha = 1/3)
+	ps.df <- data.frame(Age = rep(c(0,Age.pred), 2), N = c(pop.size.NM, pop.size.WM), migration = c(rep("no",Age.mature+1), rep("yes", Age.mature+1)))
+	ps.plot <- ggplot(ps.df, aes(x = Age, y = N)) +
+		theme_minimal() +
+		xlab("Succesional age (years)") +
+		ylab("Projected population size") +
+		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position="right") + 
+		geom_line(aes(linetype = migration), size = 1)
 	ps.plot
-
-     	ps.nm.plot
+	ggsave("pop-size.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+     	
+	ps.nm.plot
 	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
 	ps.wm.plot <- qplot(xlab = "Succesional age (years)", ylab = "Projected population size") +
 		theme_minimal() +
