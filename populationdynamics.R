@@ -562,8 +562,8 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
      	n.list <- c(sum(n.0.v))
 	init.n.a.v <- n.0.v+c*F5
      	for (a in 1:Age.mature) {
-       		n.list <- c(n.list, sum(n.a.v))
-		size.v.a.WM[[a+1]] <- n.a.v
+       		n.list <- c(n.list, sum(init.n.a.v))
+		size.v.a.WM[[a+1]] <- init.n.a.v
 		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		n.a.v <- n.a.v+c*F5
        		lam.a <- sum(n.a.v)/sum(init.n.a.v)
@@ -614,7 +614,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE)     ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
-	hist3D(x = exp(x.pred), y = Age.pred, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
+	hist3D(y = exp(x.pred), x = Age.pred, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
 	       ,theta = -90
 	       )	
 	hist3D(y = exp(x.pred), x = Age.pred, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
