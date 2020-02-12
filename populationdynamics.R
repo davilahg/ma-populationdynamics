@@ -586,7 +586,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	 			scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 5.8))
 	plot.l.graf.c
-	ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	#ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
 # size structure change over time
 {
@@ -609,14 +609,6 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 			geom_line(data = ps.df, aes(x = Age, y = N.nm), col = "red", size = 1, alpha = 1/3) +
 			geom_line(data = ps.df, aes(x = Age, y = N.wm), col = "red", linetype = "dashed", size = 1, alpha = 1/3)
 	ps.plot
-
-     	ps.nm.plot
-	ps.wm.df <- data.frame(Age = Age.pred, N = pop.size.WM)
-	ps.wm.plot <- qplot(xlab = "Succesional age (years)", ylab = "Projected population size") +
-		theme_minimal() +
-		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none")
-     	ps.nm.plot
-
 	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
 	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
