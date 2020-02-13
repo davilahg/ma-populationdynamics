@@ -209,7 +209,7 @@ for (a in 1:Age.mature) {
 # kernel plots
 k.ages <- c(1,10,20,30,40,50,60,80,100)
 zlim.k = c(0, max(k.i.j.a[,,]))
-#png(filename="kernel.atesis.png",width=8,height=8,units="in",res=150)
+pdf(file="kernel.atesis.pdf",width=8,height=8)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if ( a != 100) {
@@ -220,8 +220,8 @@ for (a in k.ages) {
 	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-#image.plot(legend.only=TRUE, zlim= zlim.k, col =  heat.colors(12),horizontal = F) 
-#dev.off()
+image.plot(legend.only=TRUE, zlim= zlim.k, col =  heat.colors(12),horizontal = F) 
+dev.off()
 # growth plots
 zlim.g = c(0, max(g.i.j.a[,,]))
 #png(filename="G.a-tesis.png",width=8,height=8,units="in",res=150)
@@ -266,18 +266,18 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
 	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
 	init.n.a.v <- n.0.v # rename vector
-	size.v.a.NM <- list(NA) # create list for size structure change, NM = no migration
-	n.list <- c() # create population size vector & setting first value
+	size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
+	n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
 	for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
-       		size.v.a.NM[[a]] <- n.a.v
+       		size.v.a.NM[[a+1]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
        		init.n.a.v <- n.a.v			# add size structure
 		}
 	tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
-	prd.N.total <- data.frame(N = n.list, Age = Age.pred)
+	prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
 } 
 # total observed lambda
 {
@@ -437,7 +437,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
   names(obs.N.total) <- c("Age", "N")
   distance.N <- function(c) {
   	  dist.N <- c()
-	  n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+	  n.0 <- which(s1.db$Age == 0)	# 
      	  n.0.h <- log(s1.db[n.0,]$h2)	#
      	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
      	  init.n.a.v <- n.0.v+c*F5
@@ -457,7 +457,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		dist.N.p <- sqrt(dist.N.p)
 		dist.N <- c(dist.N, dist.N.p)
 		}
-	        dist.N <- mean(dist.N)
+	        dist.N <- sqrt(sum(dist.N))
 	        cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
   	        return(dist.N)
   }
@@ -541,7 +541,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
  	 geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
 	 labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
  	 scale_alpha(guide = "none") +
-	 scale_y_continuous(limits = c(0, 5.8))
+	 scale_y_continuous(limits = c(0, 3))
  	 p.lam.ob
  	 #ggsave("no-migration.pdf", p.lam.ob, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
@@ -560,13 +560,13 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
      	n.0.h <- log(s1.db[n.0,]$h2)	#
      	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
      	init.n.a.v <- n.0.v+c*F5
-	size.v.a.WM <- list(NA) # size structure vector by year, WM = with migration
-     	n.list <- c()
+	size.v.a.WM <- list(init.n.a.v) # size structure vector by year, WM = with migration
+     	n.list <- c(sum(init.n.a.v))
      	for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		n.a.v <- n.a.v+c*F5
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
-       		size.v.a.WM[[a]] <- n.a.v
+       		size.v.a.WM[[a+1]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
        		init.n.a.v <- n.a.v			# add size structure
@@ -584,7 +584,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 				geom_point(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
 				geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
 	 			scale_alpha(guide = "none") +
-				scale_y_continuous(limits = c(0, 5.8))
+				scale_y_continuous(limits = c(0, 3))
 	plot.l.graf.c
 	#ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
@@ -606,18 +606,18 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 			xlab("Succesional age (years)") +
 			ylab("Projected population size") +
 			theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
-			geom_line(data = ps.df, aes(x = Age, y = N.nm), col = "red", size = 1, alpha = 1/3) +
-			geom_line(data = ps.df, aes(x = Age, y = N.wm), col = "red", linetype = "dashed", size = 1, alpha = 1/3)
+			geom_line(data = ps.df, aes(x = Age, y = N.nm), col = "red", size = 1) +
+			geom_line(data = ps.df, aes(x = Age, y = N.wm), col = "red", linetype = "dashed", size = 1)
 	ps.plot
 	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
 	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change without migration", zlim = c(0, zlim) 
-	       ,theta = -90
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Density", main = "Size structure change without migration", zlim = c(0, zlim) 
+	       #,theta = -90
 	       )	
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Probability", main = "Size structure change with migration", zlim = c(0, zlim)
+	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Density", main = "Size structure change with migration", zlim = c(0, zlim)
 	       ,theta = -90
 	       )
 }
