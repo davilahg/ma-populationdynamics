@@ -209,7 +209,7 @@ for (a in 1:Age.mature) {
 # kernel plots
 k.ages <- c(1,10,20,30,40,50,60,80,100)
 zlim.k = c(0, max(k.i.j.a[,,]))
-pdf(file="kernel.atesis.pdf",width=8,height=8)
+#pdf(file="kernel.a.pdf",width=8,height=8)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if ( a != 100) {
@@ -220,17 +220,17 @@ for (a in k.ages) {
 	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-image.plot(legend.only=TRUE, zlim= zlim.k, col =  heat.colors(12),horizontal = F) 
-dev.off()
+#image.plot(legend.only=TRUE, zlim= zlim.k, col =  heat.colors(12),horizontal = F) 
+#dev.off()
 # growth plots
-zlim.g = c(0, max(g.i.j.a[,,]))
-#png(filename="G.a-tesis.png",width=8,height=8,units="in",res=150)
+zlim.g = c(0, max(G[,,]))
+#pdf(file="G.a.pdf",width=8,height=8)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if (a != 100) {
-		image(ex.pr, ex.pr, G[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
+		image(ex.pr, ex.pr, G[a,,], zlim = zlim.g, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
 	 } else {
-		image(ex.pr, ex.pr, G[a,,], zlim = zlim.k, xlab = "", ylab = "", main = "Mature forest")
+		image(ex.pr, ex.pr, G[a,,], zlim = zlim.g, xlab = "", ylab = "", main = "Mature forest")
 	 } 
 	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
@@ -239,7 +239,7 @@ mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #dev.off()
 # p(x,y,t) = g(x,y,t)*s(x,t)
 zlim.p = c(0, max(p.i.j.a[,,]))
-#png(filename="P.a.png",width=8,height=8,units="in",res=150)
+#pdf(file="P.a.pdf",width=8,height=8)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if (a != 100) {
@@ -254,7 +254,7 @@ mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #dev.off()
 # fecundity
 zlim.f = c(0, max(f.i.a[,]))
-#png(filename="F.a.png",width=4,height=4,units="in",res=150)
+#pdf(file="F.a.pdf",width=4,height=4)
 image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = "")
 #image.plot(legend.only=TRUE, zlim= zlim.f, col =  heat.colors(12),horizontal = F)
 #dev.off()
@@ -522,7 +522,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
      	lambda.edad
      lambda.edad
-     #ggsave("lambda-edad.pdf", lambda.edad, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+     #ggsave("lambda.a.pdf", lambda.edad, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
 # by plot, no migration
  {
@@ -554,7 +554,6 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		obs.lam.p  <- rbind(obs.lam.p, obs.lam.p.i)
 		}
  # calculate new lambda list considering migration
- {
      	lam.list <- c()			# create lambda vector
      	n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
      	n.0.h <- log(s1.db[n.0,]$h2)	#
@@ -594,32 +593,36 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	pop.size.WM <- c()
 	size.v.a.NM.s <- list(NA) # size structure vector by age, NO MIGRATION, standardized
 	size.v.a.WM.s <- list(NA) # size structure vector by age, WITH MIGRATION, standardized
-	for (a in 1:Age.mature) {
+	for (a in 1:(Age.mature+1)) {
 		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))			# get population size 
 		size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
 		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
 		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])	
 		}
-	ps.df <- data.frame(Age = Age.pred, N.nm = pop.size.NM, N.wm = pop.size.WM)
-	ps.plot <- ggplot(ps.df, aes(x = Age)) +
-			theme_minimal() +
-			xlab("Succesional age (years)") +
-			ylab("Projected population size") +
-			theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
-			geom_line(data = ps.df, aes(x = Age, y = N.nm), col = "red", size = 1) +
-			geom_line(data = ps.df, aes(x = Age, y = N.wm), col = "red", linetype = "dashed", size = 1)
+	ps.df <- data.frame(Age = rep(c(0,Age.pred), 2), N = c(pop.size.NM, pop.size.WM), migration = c(rep("no",Age.mature+1), rep("yes", Age.mature+1)))
+	ps.plot <- ggplot(ps.df, aes(x = Age, y = N)) +
+		theme_minimal() +
+		xlab("Succesional age (years)") +
+		ylab("Projected population size") +
+		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position="right") + 
+		geom_line(aes(linetype = migration), size = 1)
 	ps.plot
-	plot(1:Age.mature, pop.size.NM, main = "Population vector, no migration", type = "l", las = 1, bty = "l") # plot population size
-	plot(1:Age.mature, pop.size.WM, main = "Population vector, with migration", type = "l", las = 1, bty = "l") 
-	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    ### !! QUITAR PRIMERA ESTRUCTURA OBSERVADA
+	#ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Density", main = "Size structure change without migration", zlim = c(0, zlim) 
+	#pdf(file="size.str.NM.pdf",width=8,height=8)
+	hist3D(y = exp(x.pred), x = c(0,Age.pred), z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Successional age (years)", ylab = "Size (m)", zlab = "Density", zlim = c(0, zlim) 
 	       #,theta = -90
-	       )	
-	hist3D(y = exp(x.pred), x = 1:Age.mature, z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Age", ylab = "Size", zlab = "Density", main = "Size structure change with migration", zlim = c(0, zlim)
-	       ,theta = -90
+	       ,ticktype = "detailed"
 	       )
+	#dev.off()
+	#pdf(file="size.str.WM.pdf",width=8,height=8)
+	hist3D(y = exp(x.pred), x = c(0,Age.pred), z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Successional age (years)", ylab = "Size (m)", zlab = "Density", zlim = c(0, zlim)
+	       #,theta = -90
+	       ,ticktype = "detailed"
+	       )
+	#dev.off()
 }
 
 # esto ya no está limpio
