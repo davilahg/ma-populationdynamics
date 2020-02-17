@@ -224,7 +224,7 @@ mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
 #dev.off()
 # growth plots
 zlim.g = c(0, max(G[,,]))
-#pdf(file="G.a.pdf",width=8,height=8)
+pdf(file="G.a.pdf",width=8,height=8)
 par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
 for (a in k.ages) {
 	if (a != 100) {
@@ -235,8 +235,8 @@ for (a in k.ages) {
 	}
 mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
 mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-#image.plot(legend.only=TRUE, zlim= zlim.g, col =  heat.colors(12),horizontal = F) 
-#dev.off()
+image.plot(legend.only=TRUE, zlim= zlim.g, col =  heat.colors(12),horizontal = F) 
+dev.off()
 # p(x,y,t) = g(x,y,t)*s(x,t)
 zlim.p = c(0, max(p.i.j.a[,,]))
 #pdf(file="P.a.pdf",width=8,height=8)
@@ -462,37 +462,7 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
   	        return(dist.N)
   }
 }
-# migration estimating function (for lambda)
-{
- distance.L <- function(c) {
-  	  dist.L <- c()
-	  n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
-     	  n.0.h <- log(s1.db[n.0,]$h2)	#
-     	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-     	  init.n.a.v <- n.0.v+c*F5
-	  pred.L.total <- c() # size structure vector by year, WM = with migration
-     	  for (a in 1:Age.mature) {
-       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-       		n.a.v <- n.a.v+c*F5
-		lam.p <- sum(n.a.v)/sum(init.n.a.v)
-        	pred.L.total <- c(pred.L.total, lam.p)
-       		init.n.a.v <- n.a.v			# add size structure
-       		}
-	  for (p in 1:nplot) {
-		dist.L.p <- 0
-		L.p <- obs.lam.plot[[p]]
-		max.a <- max(L.p$Age)
-	        for (j in 1:nrow(L.p))
-			dist.L.p <- dist.L.p + (L.p$lambda[j]-pred.L.total[max.a-nrow(L.p)+j])^2
-		dist.L.p <- sqrt(dist.L.p)
-		dist.L <- c(dist.L, dist.L.p)
-		}
-	        dist.L <- mean(dist.L)
-	        cat(paste0("c = ", c, ", dist = ", dist.L, "\n"))
-  	        return(dist.L)
-  }
-}
- # Try different estimators (for population size)
+# Try different estimators (for population size)
  {
     opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
     opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
@@ -501,16 +471,6 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
     opt.bfgs <- optim(0, distance.N, method = "BFGS")
     opt.bfgs$par # c = 9.35491911006061, dist = 81.8803591350612
  }
-# Try different estimators (for lambda)
- {
-    opt.brent <- optim(0, distance.L, method = "Brent", lower = 0, upper = 100000000)
-    opt.brent$par # c = 2.47619435505125, dist = 0.530052570070713
-    opt.lbf <- optim(0, distance.L, method = "L-BFGS-B")
-    c <- opt.lbf$par # c = 2.47519458486379, dist = 0.530052570638488
-    opt.bfgs <- optim(0, distance.L, method = "BFGS")
-    opt.bfgs$par # c = 15.7093246924741, dist = 0.535953969391775
- }
-}
 
 # plots
 # total, no migration
@@ -629,6 +589,322 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 
 
 # esto ya no está limpio
+
+# PLOTS
+{	
+ # Definiciones necesarias
+ {
+	 bin.size <- 0.1
+	 n.sim <- 1000
+	 h1.pred <- seq(min(s1.db$h1, na.rm = TRUE), ceiling(max(s1.db$h1, na.rm = TRUE)), length.out = m)
+	 h2.pred <- seq(min(s1.db$h2, na.rm = TRUE), ceiling(max(s1.db$h2, na.rm = TRUE)), length.out = m+1)
+	 mids.h2 <- hist(s1.db$h2, breaks = h2.pred, plot = FALSE)$mids
+	 ln.mids.h2 <- log(mids.h2)
+	 lh1.pred <- log(h1.pred)
+	 data.s.j <- subset(s1.db, !is.na(h1) & !is.na(sup))
+	 data.s.j <- droplevels(data.s.j)
+	 data.g.j <- subset(data.s.j, !is.na(h2))
+	 data.g.j <- droplevels(data.g.j)
+	 mids <- hist(s1.db$h1, breaks = h1.pred, plot = FALSE)$mids
+	 ln.mids <- log(mids)
+ 	 h1.pred.1 <- seq(min(s1.db$h1, na.rm = TRUE), ceiling(max(s1.db$h1, na.rm = TRUE)), length.out = m+1)
+ }
+  
+ # Survival
+ {
+	 data.s.j.1 <- subset(data.s.j, sup == 1)
+	 count.s.j.1 <- hist(data.s.j.1$h1, breaks = h1.pred, plot = FALSE)$counts
+	 count.s.j <- hist(data.s.j$h1, breaks = h1.pred, plot = FALSE)$counts
+	 prop.s.j <- count.s.j.1/count.s.j
+	 plot.data.s.j <- as.data.frame(matrix(ncol = 4, nrow = 4))
+	 names(plot.data.s.j) <- c("age", "h1", "prop", "n")
+	 for (a in Age.pred) {
+	 	data.a <- subset(data.s.j, Age == a)
+	 	data.a.1 <- subset(data.a, sup == 1)
+	 	count.a.1 <- hist(data.a.1$h1, breaks = h1.pred.1, plot = FALSE)$counts
+	 	count.a <- hist(data.a$h1, breaks = h1.pred.1, plot = FALSE)$counts
+	 	plot.data.s.j[(a-1)*m+1:m*a, ] <- cbind(rep(a, m), mids, count.a.1/count.a, count.a)
+	 }
+	 plot.data.s.j <- subset(plot.data.s.j, !is.na(prop))
+	 pred.s.j <- as.data.frame(matrix(ncol = 3, nrow = length(Age.pred)*length(mids)))
+	 names(pred.s.j) <- c("age.pred", "h1.pred", "s.pred")
+	 for (a in Age.pred) {
+	 	s.pred <- as.vector(predict(glmm.s, newdata = data.frame(ln.h1 = ln.mids, Age = rep(a, length(mids))), type = "response", re.form = NA))
+	 	pred.s.j[(a-1)*length(mids)+1:length(mids), ] <- cbind(rep(a, length(mids)), mids, s.pred)
+	 }
+	 g.s.j <- ggplot(pred.s.j) +
+	 theme_minimal() +
+	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+	 xlab("Successional age (years)") +
+	 ylab("Height (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradientn(colours = hcl.colors(12, "YlOrRd"), guide = "none") +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred, h1.pred, fill = s.pred, alpha = 0.35)) +
+	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
+	 geom_point(data = plot.data.s.j, aes(age, h1, color = prop, size = n), alpha = 0.5) +
+	 guides(colour = guide_colourbar(title = "Survival\nprobability", order = 1), size = guide_legend(title = "Sample\nsize", order = 2))
+	 dev.new(width = 10, height = 8)
+	 g.s.j
+	 #ggsave("survival.pdf", g.s.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)	
+ }
+ 
+ # Growth
+ {
+	#CREAR MATRIZ CON DATOS REALES
+ 	 h1.pred.g <- seq(min(g.db$h1, na.rm = TRUE), ceiling(max(g.db$h1, na.rm = TRUE)), length.out = m)
+ 	 h1.pred.1.g <- seq(min(g.db$h1, na.rm = TRUE), ceiling(max(g.db$h1, na.rm = TRUE)), length.out = m+1)
+	 data.g.mean <- subset(g.db, !is.na(h1) & !is.na(h2))
+	 count.g.1 <- hist(data.g.mean$h1, breaks = h1.pred.g, plot = FALSE)$counts
+	 data.g.matrix <- matrix(nrow = m, ncol = m, NA)
+	 for (j in 1:m) {
+	 	 g.mean.list <- c()
+		 for (a in Age.pred) {
+		 	 #para la primera altura
+		 	 if (j == 1) {
+		 		data.a.j <- subset(data.g.mean, Age == a & h1 <= h1.pred.g[j])
+		 		del.h.list <- c()
+		 		for (i in 1:nrow(data.a.j))
+		 			del.h.list[i] <- data.a.j$h2[i]-data.a.j$h1[i]
+		 		g.mean.a.j <- mean(del.h.list)
+		 		data.g.matrix[1, a] <- g.mean.a.j
+		 	 }
+		 	 # para los demás
+		 	 else {
+		 		data.a.j <- subset(data.g.mean, Age == a &  h1 <= h1.pred.g[j] & h1 > h1.pred.g[j-1])
+		 		del.h.list <- c()
+		 		for (i in 1:nrow(data.a.j))
+		 			del.h.list[i] <- data.a.j$h2[i]-data.a.j$h1[i]
+		 		g.mean.a.j <- mean(del.h.list)
+		 		data.g.matrix[j, a] <- g.mean.a.j
+		 	 }
+		 	}
+		}
+	 #CRERAR BASE DE DATOS CON DATOS REALES
+	 data.g.df <- as.data.frame(matrix(ncol = 4, nrow = 4))
+	 names(data.g.df) <- c("age", "h1", "gmean", "n")
+	 for (a in Age.pred) {
+	 	data.a <- subset(data.g.mean, Age == Age.pred[a])
+	 	count.a <- hist(data.a$h1, breaks = h1.pred.1.g, plot = FALSE)$counts
+	 	data.g.df[(a-1)*length(mids)+1:length(mids), ] <- cbind(rep(Age.pred[a], length(mids)), mids, data.g.matrix[ ,a], count.a)
+	 }
+	 #CREAR BASE DE DATOS PARA GRAFICAR MODELO
+	 pred.g.mean <- as.data.frame(matrix(ncol = 3, nrow = length(Age.pred)*length(mids)))
+	 names(pred.g.mean) <- c("age.pred", "h1.pred", "g.mean")
+	 for (a in 1:length(Age.pred)) {
+	 	g.m <- predict(lmm.g, newdata = data.frame(ln.h1 = x.pred, Age = rep(a, m)), type = "response", re.form = NA)
+      	 	delta.g <- exp(g.m)-exp(x.pred)
+	 	pred.g.mean[(a-1)*length(mids)+1:length(mids), ] <- cbind(rep(Age.pred[a], length(mids)), mids, delta.g)
+	 }
+	 #GRAFICAR
+	 g.mean.plot <- ggplot(pred.g.mean) +
+	 theme_minimal() +
+	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+	 xlab("Successional age (years)")+
+	 ylab("Height (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradientn(colours = hcl.colors(12, "YlOrRd"), guide = "none") +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred, h1.pred, fill = g.mean, alpha = 0.35)) +
+	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
+	 geom_point(data = na.omit(data.g.df), aes(age, h1, color = gmean, size = n), alpha = 0.5) +
+	 guides(colour = guide_colourbar(title = "Average\ngrowth (m)", order = 1), size = guide_legend(title = "Sample\nsize", order = 2))
+	 dev.new(width = 10, height = 8)
+	 g.mean.plot
+	 #ggsave("mean-growth.pdf", g.mean.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	 } 
+ }
+ 
+ # Fecundity 1
+ {
+ 	 data.rep <- subset(Mim.rep, !is.na(h1) & !is.na(sup))
+	 data.rep <- droplevels(data.rep)
+	 data.rep1 <- subset(Mim.rep, Rep == 1)
+	 count.rep1 <- hist(data.rep1$h1, breaks = h1.pred, plot = FALSE)$counts
+	 count.rep <- hist(data.rep$h1, breaks = h1.pred, plot = FALSE)$counts
+	 prop.rep <- count.rep1/count.rep
+	 plot.data.rep <- as.data.frame(matrix(ncol = 4, nrow = 4))
+	 names(plot.data.rep) <- c("age", "h1", "prop.f1", "n")
+	 for (a in Age.pred) { # EJG: poner los años que tienen sentido
+	     data.rep.a <- subset(data.rep, Age == a)
+	     data.rep.a.1 <- subset(data.rep.a, Rep == 1)
+	     count.rep.a.1 <- hist(data.rep.a.1$h1, breaks = h1.pred.1, plot = FALSE)$counts
+	     count.rep.a <- hist(data.rep.a$h1, breaks = h1.pred.1, plot = FALSE)$counts
+	     plot.data.rep[(a-1)*m+1:m, ] <- cbind(rep(a, m), mids, count.rep.a.1/count.rep.a, count.rep.a)
+	     }
+	 plot.data.rep <- subset(plot.data.rep, !is.na(prop.f1))
+	 pred.f1.j <- as.data.frame(matrix(ncol = 3, nrow = length(Age.pred)*length(mids)))
+	 names(pred.f1.j) <- c("age.pred", "h1.pred", "f1.pred")
+	 for (a in Age.pred) {
+	  pred.f1 <- as.vector(predict(glmm.f1, newdata = data.frame(ln.h1 = ln.mids, Age = rep(a, m)), type = "response", re.form = NA))
+	  pred.f1.j[(a-1)*m+1:m, ] <- cbind(rep(a, m), mids, pred.f1)
+	  }
+	 g.f1.j <- ggplot(pred.f1.j) +
+	 theme_minimal() +
+	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+	 xlab("Successional age (years)") +
+	 ylab("Height (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradientn(colours = hcl.colors(12, "YlOrRd"), guide = "none") +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred, h1.pred, fill = f1.pred, alpha = 0.35)) +
+	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
+	 geom_point(data = plot.data.rep, aes(age, h1, color = prop.f1, size = n), alpha = 0.5) +
+	 guides(colour = guide_colourbar(title = "Reproduction\nprobability", order = 1), size = guide_legend(title = "Sample\nsize", order = 2))
+	 dev.new(width = 10, height = 8)
+	 g.f1.j
+	 #ggsave("f1.pdf", g.f1.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+ }
+ 
+ # Fecundity 2
+ {
+	 plot.data.f2 <- as.data.frame(matrix(ncol = 3, nrow = m*Age.mature))
+	 names(plot.data.f2) <- c("age.pred.f2", "h1.pred.f2", "frt.n.pred")
+	 for (a in Age.pred) {
+	     frt.n.pred <- as.vector(predict(gam.f2$gam, newdata = data.frame(ln.h1 = x.pred, Age = rep(a, m)), type = "response", re.form = NA))
+	     plot.data.f2[(a-1)*m+1:m, ] <- cbind(rep(a, m), mids, frt.n.pred)
+	     }
+	 real.rep.data <- subset(f2.db, Rep == 1)
+	 my_varsf2 <- c("Age", "h1", "TotFrut")
+	 real.rep.data <- real.rep.data[my_varsf2]
+	 g.f2.j <- ggplot(plot.data.f2) +
+	 theme_minimal() +
+	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+	 xlab("Successional age (years)") +
+	 ylab("Height (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradientn(colours = hcl.colors(12, "YlOrRd"), guide = "none") +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred.f2, h1.pred.f2, fill = frt.n.pred, alpha = 0.35)) +
+	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
+	 geom_point(data = real.rep.data, aes(Age, h1, color = TotFrut), size = 3, alpha = 0.5) +
+	 dev.new(width = 10, height = 8)
+	 g.f2.j
+	 #ggsave("f2.pdf", g.f2.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+ }
+ 
+ # Fecundity 3
+ {
+	 #Plot f3
+	 plot.data.f3 <- as.data.frame(matrix(ncol = 3, nrow = m*length(age.pred.j)))
+	 names(plot.data.f3) <- c("age.pred.f3", "h1.pred.f3", "sd.n.pred")
+	 for (a in 1:length(age.pred.j)) {
+	     sd.n.pred <- as.vector(predict(glmm.f3, newdata = data.frame(ln.h1 = ln.mids, Age = rep(age.pred.j[a], m)), type = "response", re.form = NA))
+	     plot.data.f3[(a-1)*length(mids)+1:length(mids), ] <- cbind(rep(age.pred.j[a], length(mids)), mids, sd.n.pred)
+	     }
+	 real.rep.data <- Seeds
+	 my_varsf3 <- c("Age", "h1", "N.seed")
+	 real.rep.data <- real.rep.data[my_varsf3]
+	 g.f3.j <- ggplot(plot.data.f3) +
+	 theme_minimal() +
+	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+	 xlab("Successional age (years)") +
+	 ylab("Height (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradient(low = "#1569f1", high = "#f21515", guide = guide_legend(title = "Predicted\nseed number")) +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred.f3, h1.pred.f3, fill = sd.n.pred, alpha = 0.35)) +
+	 geom_point(data = real.rep.data, aes(Age, h1, color = N.seed), size = 3, alpha = 4/10) +
+	 scale_colour_gradient(low = "#1569f1", high = "#f21515") +
+	 guides(color = guide_legend(title = "Observed\nseed number"), size = guide_legend("Observed\nseed number")) + 
+	 #scale_fill_continuous(guide = guide_legend(title = "Número de\nsemillas predicho"))
+	 dev.new(width = 10, height = 8)
+	 g.f3.j
+	 ggsave("fc3-gg.png", g.f3.j, device = "png", width = 10, height = 7, units = "in", dpi = 180*2)
+ }
+ 
+ # F1234
+ {
+	 # Plot f12 y  f123
+	 my_varsf1 <- c("age.pred", "h1.pred", "f1.pred")
+	 my_varsf2 <- c("age.pred.f2", "h1.pred.f2", "frt.n.pred")
+	 my_varsf3 <- c("sd.n.pred")
+	 plot.data.f12 <- cbind(pred.f1.j[my_varsf1], plot.data.f2[my_varsf2], plot.data.f3[my_varsf3])
+	 plot.data.f12 <- transform(plot.data.f12, f12.pred = f1.pred*frt.n.pred)
+	 plot.data.f123 <- transform(plot.data.f12, f123.pred = f12.pred*sd.n.pred)
+	 stb.pred <- as.data.frame(rep(predict(gam.f4, newdata = data.frame(x = 1:100), type = "response"), Age.mature))
+	 colnames(stb.pred) <- c("stb.pred")
+	 plot.data.f1234 <- cbind(plot.data.f123, stb.pred)
+	 plot.data.f1234 <- transform(plot.data.f1234, f1234.pred = f123.pred*stb.pred)
+
+	 # plot f12
+	 real.rep.data <- subset(Mim.frut, Rep == 1)
+	 my_varsf12 <- c("Age", "h1", "TotFrut")
+	 real.rep.data <- real.rep.data[my_varsf12]
+	 g.f12.j <- ggplot(plot.data.f123) +
+	 theme_minimal() +
+	 theme(axis.text = element_text(size = 10), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 10), legend.title = element_text(size = 15)) +
+	 ggtitle(expression(italic(f)[12])) +
+     xlab(expression(paste("Edad sucesional ", italic(t), " (años)"))) +
+	 ylab(expression("Altura en el tiempo (m)")) +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradientn(colours = c("#f22a0c", "#f7f445"), guide = guide_legend(title = "Número de frutos\npredicho")) +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred, h1.pred, fill = f12.pred, alpha = 0.35)) +
+	 geom_point(data = real.rep.data, aes(Age, h1, color = TotFrut), size = 10, alpha = 4/10) +
+	 scale_colour_gradient(low = "#f22a0c", high = "#f7f445") +
+	 guides(color = guide_legend(title = "Número de frutos\nobservado"), size = guide_legend("Número de frutos\nobservado")) 
+	 #scale_fill_continuous(guide = guide_legend(title = "Número de\nsemillas predicho"))
+	 dev.new(width = 10, height = 8)
+	 g.f12.j
+	 #ggsave("/home/gerardo/MEGA/Tesis/Gráficas/f12Plot.pdf", g.f12.j, device = "pdf", width = 14, height = 10, units = "in")
+
+
+	 # plot f123
+	 real.rep.data <- Seeds
+	 my_varsf3 <- c("Age", "h1", "N.seed")
+	 real.rep.data <- real.rep.data[my_varsf3]
+	 g.f123.j <- ggplot(plot.data.f123) +
+	 theme_linedraw() +
+	 theme(axis.text = element_text(size = 15), axis.title = element_text(size = 25, face = "bold"), legend.text = element_text(size = 15), legend.title = element_text(size = 25)) +
+	 ggtitle("F123") +
+     xlab("Edad de abandono (años)") +
+	 ylab("Altura en el tiempo t (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradient(low = "#f22a0c", high = "#f7f445", guide = guide_legend(title = "Número de semillas\npredicho")) +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred, h1.pred, fill = f123.pred, alpha = 0.35)) +
+	 geom_point(data = real.rep.data, aes(Age, h1, color = N.seed), size = 10, alpha = 4/10) +
+	 scale_colour_gradient(low = "#f22a0c", high = "#f7f445") +
+	 guides(color = guide_legend(title = "Número de semillas\nobservado"), size = guide_legend("Número de semillas\nobservado")) + 
+	 #scale_fill_continuous(guide = guide_legend(title = "Número de\nsemillas predicho"))
+	 dev.new(width = 10, height = 8)
+	 g.f123.j
+	 #ggsave("/home/gerardo/MEGA/Tesis/Gráficas/f123Plot.pdf", g.f123.j, device = "pdf", width = 14, height = 10, units = "in")
+
+
+	 #plot f1234
+	 #real.rep.data <- Seeds
+	 #my_varsf3 <- c("Age", "h1", "N.seed")
+	 #real.rep.data <- real.rep.data[my_varsf3]
+	 g.f1234.j <- ggplot(plot.data.f1234) +
+	 theme_linedraw() +
+	 theme(axis.text = element_text(size = 15), axis.title = element_text(size = 25, face = "bold"), legend.text = element_text(size = 15), legend.title = element_text(size = 25)) +
+	 ggtitle("F1234") +
+     xlab("Edad de abandono (años)") +
+	 ylab("Altura en el tiempo t (m)") +
+	 scale_x_continuous(expand = c(0,0)) +
+	 scale_y_continuous(expand = c(0,0)) +
+	 scale_fill_gradient(low = "#f22a0c", high = "#f7f445", guide = guide_legend(title = "Número de reclutas\npredicho")) +
+	 scale_alpha(guide = "none") +
+	 geom_raster(aes(age.pred, h1.pred, fill = f1234.pred)) +
+	 #geom_point(data = real.rep.data, aes(Age, h1, color = N.seed), size = 10, alpha = 4/10) +
+	 scale_colour_gradient(low = "#f22a0c", high = "#f7f445") +
+	 #guides(color = guide_legend(title = "Número de semillas\nobservado"), size = guide_legend("Número de semillas\nobservado")) + 
+	 #scale_fill_continuous(guide = guide_legend(title = "Número de\nsemillas predicho"))
+	 dev.new(width = 10, height = 8)
+	 g.f1234.j
+	 #ggsave("/home/gerardo/MEGA/Tesis/Gráficas/f123Plot.pdf", g.f123.j, device = "pdf", width = 14, height = 10, units = "in")
+ }
+
+
 
 # plots F5
   f5.p.df <- data.frame(f5.db$Age, f5.db$h1)
