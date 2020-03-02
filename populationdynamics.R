@@ -513,21 +513,22 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
        		init.n.a.v <- n.a.v			# add size structure
        		}
         tot.lam.pred <- lam.list
-	lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature))
-   	lambda.df.2 <- transform(lambda.df, plot = as.factor("total"))
-	#
+	Age = rep(Age.pred,2)
+	lambda = c(lambda.df.NM$lambda, lam.list)
+	Migration = c(rep("no",100),rep("yes",100))
+	lambda.df.2 <- data.frame(Age, lambda, Migration)
 	plot.l.graf.c <- ggplot(lambda.df.2, aes(x = Age, y = lambda)) +
 				theme_minimal() +
 				xlab(expression(paste("Abandonment time ", italic(t), " (years)"))) +
 				ylab(expression(lambda)) +
 				theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) + 
-				geom_line(size = 2, alpha = 1/3, col = "red") + 
+				geom_line(size = 2, alpha = 0.8, aes(color=Migration)) + 
 				geom_point(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
 				geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
 	 			scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 3))
 	plot.l.graf.c
-	#ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 }
 # size structure & population size change over time
 {
@@ -548,10 +549,10 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 		xlab("Succesional age (years)") +
 		ylab("Projected population size") +
 		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position="right") + 
-		geom_line(aes(linetype = migration), size = 1) +
+		geom_line(aes(color = migration), size = 1) +
 		geom_point(data = obs.N.total, aes(x = Age, y = N))
 	ps.plot
-	#ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #    
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE) 
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
