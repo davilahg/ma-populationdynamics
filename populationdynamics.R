@@ -262,179 +262,6 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
 	prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
 }
-# sensitivity
-{
-	sensitivity <- function(mat, string, mod) {
-		if (string == 'S') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- mat*mod
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string ==  'G') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*(mat[a, j, i]*mod)
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F1') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- (mat[i, a]*mod)*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F2') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*(mat[i, a]*mod)*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F3') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*(mat[i, a]*mod)*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F4') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*(mat[a]*mod)
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F5') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*(mat[j]*mod)
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+(mat[a, j, i]*mod)
-				}
-				}
-			}
-		}
-		else {
-			return('wrong input: array')
-			break
-		}
-		# lambda
-		{
-			lam.list <- c()
-			n.0 <- which(s1.db$Age == 0)
-			n.0.h <- log(s1.db[n.0,]$h2)
-			n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-			init.n.a.v <- n.0.v
-			size.v.a.NM <- list(init.n.a.v)
-			n.list <- c(sum(init.n.a.v))
-			for (a in 1:Age.mature) {
-				n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-				lam.a <- sum(n.a.v)/sum(init.n.a.v)
-				size.v.a.NM[[a+1]] <- n.a.v
-				n.list <- c(n.list, sum(n.a.v))
-				lam.list <- c(lam.list, lam.a)
-				init.n.a.v <- n.a.v
-				}
-		} 
-		return(lam.list)
-	}
-	# sensitivity
-	F <- f.i.j.a
-	mod <- c(-2,-0.1,-0.01,-0.001,-0.0001,1,1.0001,1.001,1.01,1.1,2)
-	vrname <- list('S', 'G', 'F1', 'F2', 'F3', 'F4', 'F5', 'F')
-	vrarray <- list(S, G, F1, F2, F3, F4, F5, F)
-	for (i in (1:8)) { # 8 is the length of vrname & vrarray
-		sens.i <- matrix(nrow = m, ncol = length(mod))
-		for (j in 1:11) { # 11 is the length of mod	
-			sens.i[,j] <- sensitivity(vrarray[[i]], vrname[[i]], mod[j])
-			assign(paste0('sens', vrname[i]), sens.i)
-		}
-	}
-
-	plot(Age.pred, sensitivity(S,'S', 1), ylim = c(min(sensS, na.rm = TRUE),max(sensS, na.rm = TRUE)))
-	for (j in 1:ncol(sensS)) {
-		lines(Age.pred,sensS[,j])
-	}
-
-	plot(Age.pred, sensitivity(G,'G', 1), ylim = c(min(sensG, na.rm = TRUE),max(sensG, na.rm = TRUE)))
-	for (j in 1:ncol(sensG)) {
-		lines(Age.pred,sensG[,j])
-	}
-
-	plot(Age.pred, sensitivity(F,'F', 1), ylim = c(min(sensF, na.rm = TRUE),max(sensF, na.rm = TRUE)))
-	for (j in 1:ncol(sensF)) {
-		lines(Age.pred,sensF[,j])
-	}
-}
 # total observed lambda
 {
    	   ob.lam.list <- c()				# create observed lambda vector
@@ -701,7 +528,184 @@ image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = ""
 	 			scale_alpha(guide = "none") +
 				scale_y_continuous(limits = c(0, 3))
 	plot.l.graf.c
-	ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	#ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+}
+# sensitivity
+{
+	sensitivity <- function(mat, string, mod) {
+		if (string == 'S') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- mat*mod
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string ==  'G') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*(mat[a, j, i]*mod)
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string == 'F1') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- (mat[i, a]*mod)*F2[i, a]*F3[i, a]*F4[a]
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string == 'F2') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- F1[i, a]*(mat[i, a]*mod)*F3[i, a]*F4[a]
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string == 'F3') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- F1[i, a]*F2[i, a]*(mat[i, a]*mod)*F4[a]
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string == 'F4') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*(mat[a]*mod)
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string == 'F5') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    f.i.j.a[a, j, i] <- f.i.a[i, a]*(mat[j]*mod)
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+				}
+				}
+			}
+		}
+		else if (string == 'F') {
+			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m)) 
+			s.i.a <- S
+			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+			for (a in 1:Age.mature) {
+				for (i in 1:m) {
+				for (j in 1:m) {
+			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+(mat[a, j, i]*mod)
+				}
+				}
+			}
+		}
+		else {
+			return('wrong input: array')
+			break
+		}
+		# lambda
+		{
+			lam.list <- c()	
+			n.0 <- which(s1.db$Age == 0)
+			n.0.h <- log(s1.db[n.0,]$h2)
+			n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+			init.n.a.v <- n.0.v+c*F5
+			n.list <- c(sum(init.n.a.v))
+			for (a in 1:Age.mature) {
+				n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+				n.a.v <- n.a.v+c*F5
+				lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+				n.list <- c(n.list, sum(n.a.v))
+				lam.list <- c(lam.list, lam.a)
+				init.n.a.v <- n.a.v			# add size structure
+				}
+		} 
+		return(lam.list)
+	}
+	# sensibility
+	F <- f.i.j.a
+	mod <- c(0.9,0.99,0.999,0.9999,1,1.0001,1.001,1.01,1.1)
+	vrname <- list('S', 'G', 'F1', 'F2', 'F3', 'F4', 'F5', 'F')
+	vrarray <- list(S, G, F1, F2, F3, F4, F5, F)
+	for (i in (1:8)) { # 8 is the length of vrname & vrarray
+		sens.i <- matrix(nrow = m, ncol = length(mod))
+		for (j in 1:9) { # 9 is the length of mod	
+			sens.i[,j] <- sensitivity(vrarray[[i]], vrname[[i]], mod[j])
+			assign(paste0('sens', vrname[i]), sens.i)
+		}
+	}
+	sens.plot <- matrix(ncol = 3, nrow = length(mod)*length(vrname), NA)
+	sens.l <- list(sensS, sensG, sensF1, sensF2, sensF3, sensF4, sensF5, sensF)
+	for (i in 1:length(sens.l)) {
+		for (j in 1:ncol(sens.l[[i]])) {
+			sens.plot[((i-1)*length(mod)+1):(i*length(mod)),1] <- mod
+			sens.plot[((i-1)*length(mod)+1):(i*length(mod)),2][j] <- mean(sens.l[[i]][,5])-mean(sens.l[[i]][,j]) # column 5 correspond to no modification
+			#sens.plot[((i-1)*length(mod)+1):(i*length(mod)),3] <- rep(vrname[[i]], length(mod))
+		}
+	}
+	sens.s.p <- as.data.frame(sens.plot[1:9,])
+	colnames(sens.s.p) = c('mod','delta.lam','vr')
+	plot(sens.s.p$mod, sens.s.p$delta.lam)
+
+	sens.s.g <- as.data.frame(sens.plot[10:18,])
+	colnames(sens.s.g) = c('mod','delta.lam','vr')
+	plot(sens.s.g$mod, sens.s.g$delta.lam)
+
+	sens.s.f <- as.data.frame(sens.plot[65:72,])
+	colnames(sens.s.f) = c('mod','delta.lam','vr')
+	plot(sens.s.f$mod, sens.s.f$delta.lam)
 }
 # size structure & population size change over time
 {
