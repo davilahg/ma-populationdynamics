@@ -1,4 +1,5 @@
 # Population dynamics of Mimosa acantholoba
+# esta línea es de prueba para ver si se actualiza en el repositorio local
 ## EDGAR
 setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
 # load requiered libraries
