@@ -1,8 +1,15 @@
 # Population dynamics of Mimosa acantholoba
+## EDGAR
+setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
 # load requiered libraries
 library(AICcmodavg)
 library(betareg)
 library(EnvStats)
+library(gamm4)
+library(ggplot2)
+library(lme4)
+library(mgcv)
+library(reshape2)
 library(plotly)
 library(gridExtra)
 library(plot3D)
