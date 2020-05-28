@@ -1,5 +1,5 @@
 # Population dynamics of Mimosa acantholoba
-## EDGAR
+#
 setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
 # load requiered libraries
 library(AICcmodavg)
@@ -446,7 +446,7 @@ library(fields)
   	        return(dist.N)
   }
 }
-# Try different estimators (for population size)
+# trying different estimators (for population size)
 {
     opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
     opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
