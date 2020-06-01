@@ -742,15 +742,15 @@ library(fields)
   	}
   	sens.s.p <- as.data.frame(sens.plot[1:9,])
   	colnames(sens.s.p) = c('mod','delta.lam','vr')
-  	plot(sens.s.p$mod, sens.s.p$delta.lam)
+  	plot(sens.s.p$mod, sens.s.p$delta.lam, type = 'l', col = 'black')
 
   	sens.s.g <- as.data.frame(sens.plot[10:18,])
   	colnames(sens.s.g) = c('mod','delta.lam','vr')
-  	plot(sens.s.g$mod, sens.s.g$delta.lam)
+  	lines(sens.s.g$mod, sens.s.g$delta.lam, col = 'red')
 
-  	sens.s.f <- as.data.frame(sens.plot[65:72,])
+  	sens.s.f <- as.data.frame(sens.plot[64:72,])
   	colnames(sens.s.f) = c('mod','delta.lam','vr')
-  	plot(sens.s.f$mod, sens.s.f$delta.lam)
+  	lines(sens.s.f$mod, sens.s.f$delta.lam, col = 'blue')
   }
 }
 # size structure & population size change over time
