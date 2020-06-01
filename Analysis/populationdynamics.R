@@ -446,6 +446,36 @@ library(fields)
   	        return(dist.N)
   }
 }
+# migration estimating function (for lambda)
+{
+ distance.L <- function(c) {
+  	  dist.L <- c()
+	  n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+     	  n.0.h <- log(s1.db[n.0,]$h2)	#
+     	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+     	  init.n.a.v <- n.0.v+c*F5
+	  pred.L.total <- c() # size structure vector by year, WM = with migration
+     	  for (a in 1:Age.mature) {
+       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+       		n.a.v <- n.a.v+c*F5
+		lam.p <- sum(n.a.v)/sum(init.n.a.v)
+        	pred.L.total <- c(pred.L.total, lam.p)
+       		init.n.a.v <- n.a.v			# add size structure
+       		}
+	  for (p in 1:nplot) {
+		dist.L.p <- 0
+		L.p <- obs.lam.plot[[p]]
+		max.a <- max(L.p$Age)
+	        for (j in 1:nrow(L.p))
+			dist.L.p <- dist.L.p + (L.p$lambda[j]-pred.L.total[max.a-nrow(L.p)+j])^2
+		dist.L.p <- sqrt(dist.L.p)
+		dist.L <- c(dist.L, dist.L.p)
+		}
+	        dist.L <- mean(dist.L)
+	        cat(paste0("c = ", c, ", dist = ", dist.L, "\n"))
+  	        return(dist.L)
+  }
+}
 # trying different estimators (for population size)
 {
     opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
@@ -454,7 +484,16 @@ library(fields)
     c <- opt.lbf$par # c = 9.35391449733551, dist = 81.8803596331657
     opt.bfgs <- optim(0, distance.N, method = "BFGS")
     opt.bfgs$par # c = 9.35491911006061, dist = 81.8803591350612
- }
+}
+# trying different estimators (for lambda)
+{
+     opt.brent <- optim(0, distance.L, method = "Brent", lower = 0, upper = 100000000)
+     opt.brent$par # c = 2.47619435505125, dist = 0.530052570070713
+     opt.lbf <- optim(0, distance.L, method = "L-BFGS-B")
+     opt.lbf$par # c = 2.47519458486379, dist = 0.530052570638488
+     opt.bfgs <- optim(0, distance.L, method = "BFGS")
+     opt.bfgs$par # c = 15.7093246924741, dist = 0.535953969391775
+}
 # migration
 {
   # total, no migration
@@ -682,7 +721,7 @@ library(fields)
 	# sensitivity analysis
  {
   	F <- f.i.j.a
-  	mod <- c(0.9,0.99,0.999,0.9999,1,1.0001,1.001,1.01,1.1)
+  	mod <- c(0.999,0.9999,0.99999,0.999999,1,1.000001,1.00001,1.0001,1.001)
   	vrname <- list('S', 'G', 'F1', 'F2', 'F3', 'F4', 'F5', 'F')
   	vrarray <- list(S, G, F1, F2, F3, F4, F5, F)
   	for (i in (1:8)) { # 8 is the length of vrname & vrarray
@@ -736,7 +775,7 @@ library(fields)
 		geom_line(aes(color = migration), size = 1) +
 		geom_point(data = obs.N.total, aes(x = Age, y = N))
 	ps.plot
-	ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	#ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
 	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #
 	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
 	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
