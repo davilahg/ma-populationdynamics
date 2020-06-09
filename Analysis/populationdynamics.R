@@ -2,6 +2,7 @@
 #
 setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
 # load requiered libraries
+# probando
 library(AICcmodavg)
 library(betareg)
 library(EnvStats)
