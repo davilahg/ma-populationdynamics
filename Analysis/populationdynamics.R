@@ -2,6 +2,7 @@
 #
 setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
 # load requiered libraries
+# install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'reshape2', 'gridExtra', 'plot3D', 'fields'))
 library(AICcmodavg)
 library(betareg)
 library(EnvStats)
@@ -262,7 +263,7 @@ library(fields)
   	}
   tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
   prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
-    }
+}
 # total observed lambda
 {
   ob.lam.list <- c()				# create observed lambda vector
@@ -569,7 +570,7 @@ library(fields)
       scale_y_continuous(limits = c(0, 3))
       plot.l.graf.c
       #ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-    }
+  }
 }
 # sensitivity
 {
@@ -794,21 +795,20 @@ library(fields)
 {
  # definitions
  {
-	 bin.size <- 0.1
-	 n.sim <- 1000
-	 h1.pred <- seq(min(s1.db$h1, na.rm = TRUE), ceiling(max(s1.db$h1, na.rm = TRUE)), length.out = m)
-	 h2.pred <- seq(min(s1.db$h2, na.rm = TRUE), ceiling(max(s1.db$h2, na.rm = TRUE)), length.out = m+1)
-	 mids.h2 <- hist(s1.db$h2, breaks = h2.pred, plot = FALSE)$mids
-	 ln.mids.h2 <- log(mids.h2)
-	 lh1.pred <- log(h1.pred)
-	 data.s.j <- subset(s1.db, !is.na(h1) & !is.na(sup))
-	 data.s.j <- droplevels(data.s.j)
-	 data.g.j <- subset(data.s.j, !is.na(h2))
-	 data.g.j <- droplevels(data.g.j)
- 	 h1.pred.1 <- seq(min(s1.db$h1, na.rm = TRUE), ceiling(max(s1.db$h1, na.rm = TRUE)), length.out = m+1)
-	 mids <- hist(s1.db$h1, breaks = h1.pred.1, plot = FALSE)$mids
-	 ln.mids <- log(mids)
-
+    bin.size <- 0.1
+    n.sim <- 1000
+    h1.pred <- seq(min(s1.db$h1, na.rm = TRUE), ceiling(max(s1.db$h1, na.rm = TRUE)), length.out = m)
+    h2.pred <- seq(min(s1.db$h2, na.rm = TRUE), ceiling(max(s1.db$h2, na.rm = TRUE)), length.out = m+1)
+    mids.h2 <- hist(s1.db$h2, breaks = h2.pred, plot = FALSE)$mids
+    ln.mids.h2 <- log(mids.h2)
+    lh1.pred <- log(h1.pred)
+    data.s.j <- subset(s1.db, !is.na(h1) & !is.na(sup))
+    data.s.j <- droplevels(data.s.j)
+    data.g.j <- subset(data.s.j, !is.na(h2))
+    data.g.j <- droplevels(data.g.j)
+    h1.pred.1 <- seq(min(s1.db$h1, na.rm = TRUE), ceiling(max(s1.db$h1, na.rm = TRUE)), length.out = m+1)
+    mids <- hist(s1.db$h1, breaks = h1.pred.1, plot = FALSE)$mids
+    ln.mids <- log(mids)
  }
  # Survival
  {
@@ -833,25 +833,25 @@ library(fields)
 	 	pred.s.j[(a-1)*length(mids)+1:length(mids), ] <- cbind(rep(a, length(mids)), mids, s.pred)
 	 }
 	 g.s.j <- ggplot(pred.s.j) +
-	 theme_minimal() +
-	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
-	 xlab("Successional age (years)") +
-	 ylab("Height (m)") +
-	 scale_x_continuous(expand = c(0,0)) +
-	 scale_y_continuous(expand = c(0,0)) +
-	 scale_fill_gradientn(colours = hcl.colors(12, "YlOrRd"), guide = "none") +
-	 scale_alpha(guide = "none") +
-	 geom_raster(aes(age.pred, h1.pred, fill = s.pred, alpha = 0.35)) +
-	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
-	 geom_point(data = plot.data.s.j, aes(age, h1, color = prop, size = n), alpha = 0.5) +
-	 guides(colour = guide_colourbar(title = "Survival\nprobability", order = 1), size = guide_legend(title = "Sample\nsize", order = 2))
-	 dev.new(width = 10, height = 8)
-	 g.s.j
-	 #ggsave("survival.pdf", g.s.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+  	 theme_minimal() +
+  	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+  	 xlab("Successional age (years)") +
+  	 ylab("Height (m)") +
+  	 scale_x_continuous(expand = c(0,0)) +
+  	 scale_y_continuous(expand = c(0,0)) +
+  	 scale_fill_gradientn(colors = hcl.colors(12, "YlOrRd"), guide = "none") +
+  	 scale_alpha(guide = "none") +
+  	 geom_raster(aes(age.pred, h1.pred, fill = s.pred, alpha = 0.35)) +
+  	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
+  	 geom_point(data = plot.data.s.j, aes(age, h1, color = prop, size = n), alpha = 0.5) +
+  	 guides(colour = guide_colourbar(title = "Survival\nprobability", order = 1), size = guide_legend(title = "Sample\nsize", order = 2))
+  	 dev.new(width = 10, height = 8)
+  	 g.s.j
+  	 #ggsave("survival.pdf", g.s.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
  # growth
  {
-	# create matrix with observed data
+	 # create matrix with observed data
  	 h1.pred.g <- seq(min(g.db$h1, na.rm = TRUE), ceiling(max(g.db$h1, na.rm = TRUE)), length.out = m)
  	 h1.pred.1.g <- seq(min(g.db$h1, na.rm = TRUE), ceiling(max(g.db$h1, na.rm = TRUE)), length.out = m+1)
 	 data.g.mean <- subset(g.db, !is.na(h1) & !is.na(h2))
@@ -956,7 +956,6 @@ library(fields)
 	 g.f1.j
 	 #ggsave("f1.pdf", g.f1.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
-
  # Fecundity 2
  {
 	 plot.data.f2 <- as.data.frame(matrix(ncol = 3, nrow = m*Age.mature))
