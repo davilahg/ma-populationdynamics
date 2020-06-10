@@ -209,7 +209,7 @@ library(fields)
   #dev.off()
   # growth plots
   zlim.g = c(0, max(G[,,]))
-  pdf(file="G.a.pdf",width=8,height=8)
+  #pdf(file="G.a.pdf",width=8,height=8)
   par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
   for (a in k.ages) {
   	if (a != 100) {
@@ -220,8 +220,8 @@ library(fields)
   	}
   mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
   mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-  image.plot(legend.only=TRUE, zlim= zlim.g, col =  heat.colors(12),horizontal = F)
-  dev.off()
+  #image.plot(legend.only=TRUE, zlim= zlim.g, col =  heat.colors(12),horizontal = F)
+  #dev.off()
   # p(x,y,t) = g(x,y,t)*s(x,t)
   zlim.p = c(0, max(p.i.j.a[,,]))
   #pdf(file="P.a.pdf",width=8,height=8)
@@ -246,113 +246,113 @@ library(fields)
 }
 # total predicted lambda
 {
-	lam.list <- c()
-	n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
-	n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
-	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-	init.n.a.v <- n.0.v # rename vector
-	size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
-	n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
-	for (a in 1:Age.mature) {
+  lam.list <- c()
+  n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
+  n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
+  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
+  init.n.a.v <- n.0.v # rename vector
+  size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
+  n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
+  for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
        		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
        		size.v.a.NM[[a+1]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
        		init.n.a.v <- n.a.v			# add size structure
-		}
-	tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
-	prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
-}
+  	}
+  tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
+  prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
+    }
 # total observed lambda
 {
-   	   ob.lam.list <- c()				# create observed lambda vector
- 	   N.0 <- subset(s1.db, Age == 0)		# get row number of trees in first year
- 	   N.0 <- subset(N.0, sup == 1)			# filtering to obtain only alive trees
- 	   N.init <- nrow(N.0)				# get number of alive trees in first year
- 	   N.list <- c(N.init)				# create a new list of observed population sizes and setting first value
- 	   for (i in 1:(Age.mature-1)) {
- 		   ns.i <- subset(s1.db, Age == i)	# create a set of trees in year a, starting from a = 1
- 		   ns.i <- subset(ns.i, sup == 1)	# filtering to get only alive trees
- 		   N.ns.i <- nrow(ns.i)			# counting trees
- 		   if (N.ns.i != 0 & N.init != 0) {	# if it is not an empty vector:
- 			   lambda <- N.ns.i/N.init	# get lambda
- 			 } else {			# if it is:
- 				 lambda <- NA		# set lambda to NA (avoiding to get 0 instead of NA)
- 			 }
- 		   N.init <- N.ns.i			# set a new initial population for next lambda
- 		   N.list <- c(N.list, N.init)		# add new population size to vector
- 		   ob.lam.list <- c(ob.lam.list, lambda)# aff new lambda to observed lambda vector
- 	    }
-     ns.mature <- subset(s1.db, Age == Age.mature) 	# get mature forest subset (avoid population overestimating due to individuals repeat at Age.mature)
-     ns.mature <- subset(ns.mature, sup == 1)		# get alive trees only
-     ns.mature <- transform(ns.mature, Census = as.factor(as.character(Census))) # transform census year as factor
-     ns.mature <- droplevels(ns.mature) # drop useless levels
-     N.mat.list <- c()  # create new vector of population sizes
-     for (i in levels(ns.mature$Census)) {		# for each year in mature forest:
-     	ns.mat.yr <- subset(ns.mature, Census == i)	# get a subset of population in census year = i
-     	ns.mat.N <- nrow(ns.mat.yr)			# count trees
-     	N.mat.list <- c(N.mat.list, ns.mat.N)		# add population size to vector
-     }
-     lam.m.list <- c()					# create a new vector of lambdas of mature forest
-     init.n.mat <- N.mat.list[1]			# set first population size
-     for (j in 2:length(N.mat.list)) {			# for every j in population size list:
-     	lam.j <- N.mat.list[j]/init.n.mat		# get lambda
-     	lam.m.list <- c(lam.m.list,lam.j)		# add lambda to list
-     	init.n.mat <- N.mat.list[j]			# reset initial population size
-     }
-     N.list[100] <- round(mean(N.mat.list))
-     lam.mature <- geoMean(lam.m.list)			# apply geometric mean to get mature forest lambda
-     ob.lam.list <- c(ob.lam.list, lam.mature)		# add observed lambda in mature forest to the whole succession list
-     ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature)) # create database for observed lambdas
-     names(ob.lam.df) <- c("Age", "ob.lambda")		# naming database
-     ob.lam.df$Age <- Age.pred			# set age range
-     ob.lam.df$ob.lambda[Age.pred] <- ob.lam.list # set observed lambda value
-     lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plotting
+  ob.lam.list <- c()				# create observed lambda vector
+  N.0 <- subset(s1.db, Age == 0)		# get row number of trees in first year
+  N.0 <- subset(N.0, sup == 1)			# filtering to obtain only alive trees
+  N.init <- nrow(N.0)				# get number of alive trees in first year
+  N.list <- c(N.init)				# create a new list of observed population sizes and setting first value
+  for (i in 1:(Age.mature-1)) {
+    ns.i <- subset(s1.db, Age == i)	# create a set of trees in year a, starting from a = 1
+    ns.i <- subset(ns.i, sup == 1)	# filtering to get only alive trees
+    N.ns.i <- nrow(ns.i)			# counting trees
+    if (N.ns.i != 0 & N.init != 0) {	# if it is not an empty vector:
+     lambda <- N.ns.i/N.init	# get lambda
+    } else {			# if it is:
+     lambda <- NA		# set lambda to NA (avoiding to get 0 instead of NA)
+    }
+      N.init <- N.ns.i			# set a new initial population for next lambda
+      N.list <- c(N.list, N.init)		# add new population size to vector
+      ob.lam.list <- c(ob.lam.list, lambda)# aff new lambda to observed lambda vector
+  }
+  ns.mature <- subset(s1.db, Age == Age.mature) 	# get mature forest subset (avoid population overestimating due to individuals repeat at Age.mature)
+  ns.mature <- subset(ns.mature, sup == 1)		# get alive trees only
+  ns.mature <- transform(ns.mature, Census = as.factor(as.character(Census))) # transform census year as factor
+  ns.mature <- droplevels(ns.mature) # drop useless levels
+  N.mat.list <- c()  # create new vector of population sizes
+  for (i in levels(ns.mature$Census)) {		# for each year in mature forest:
+    ns.mat.yr <- subset(ns.mature, Census == i)	# get a subset of population in census year = i
+    ns.mat.N <- nrow(ns.mat.yr)			# count trees
+    N.mat.list <- c(N.mat.list, ns.mat.N)		# add population size to vector
+  }
+  lam.m.list <- c()					# create a new vector of lambdas of mature forest
+  init.n.mat <- N.mat.list[1]			# set first population size
+  for (j in 2:length(N.mat.list)) {			# for every j in population size list:
+    lam.j <- N.mat.list[j]/init.n.mat		# get lambda
+    lam.m.list <- c(lam.m.list,lam.j)		# add lambda to list
+    init.n.mat <- N.mat.list[j]			# reset initial population size
+  }
+  N.list[100] <- round(mean(N.mat.list))
+  lam.mature <- geoMean(lam.m.list)			# apply geometric mean to get mature forest lambda
+  ob.lam.list <- c(ob.lam.list, lam.mature)		# add observed lambda in mature forest to the whole succession list
+  ob.lam.df <- as.data.frame(matrix(ncol = 2, nrow = Age.mature)) # create database for observed lambdas
+  names(ob.lam.df) <- c("Age", "ob.lambda")		# naming database
+  ob.lam.df$Age <- Age.pred			# set age range
+  ob.lam.df$ob.lambda[Age.pred] <- ob.lam.list # set observed lambda value
+  lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plotting
 }
 # predicted lambda by plot
 {
-     load("./Data/kernel-plot-list.RData")					# read list of kernels calculated by plot: poner link del código?
-     s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))		# transform plot variable to factor
-     nplot <- nlevels(s1.db$PLOT)						# get number of plots
-     est.lam.df <- as.data.frame(matrix(nrow = Age.mature, ncol = nplot, NA))	# create new database for estimated lambda values
-     names(est.lam.df) <- 1:nplot						# plot names
-     for (i in 1:nplot) {								# for each plot:
-       	 Mim.s.p <- subset(s1.db, PLOT == i & !is.na(ln.h2))			# get a subset of plot i omitting NA's
-         if (Mim.s.p$PLOT[1] != 5) {						# if plot number is 5 (mature forest):
-          if (all(!is.na(Mim.s.p$Age))) {					# if it is not an empty list:
-             lam.list <- c()							# create new empty list for lambda values
-             min.a <- min(Mim.s.p$Age, na.rm = TRUE)				# set maximum height for that plot
-             max.a <- max(Mim.s.p$Age, na.rm = TRUE)				# set minimum height for that plot
-             n.1.i <- which(Mim.s.p$Age == min.a)				# get row number of trees
-             n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get height of trees
-             init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # get size structure vector and set initial vector
-             for (a in ((min.a+1):max.a)) {					# for every year:
-                  n.a.v.i <- k.p.list[[as.integer(i)]][(a-min.a),,]%*%init.n.a.v.i # multiply size vector by plot kernel
-                  lam.a.i <- sum(n.a.v.i)/sum(init.n.a.v.i)			# get lambda
-                  init.n.a.v.i <- n.a.v.i					# reset initial vector
-                  lam.list <- c(lam.list, lam.a.i)				# add lambda to list
-              }
-             est.lam.df[(min.a+1):max.a, as.numeric(i)] <- lam.list		# fill database
+  load("./Data/kernel-plot-list.RData")					# read list of kernels calculated by plot: poner link del código?
+  s1.db <- transform(s1.db, PLOT = as.factor(as.character(plot)))		# transform plot variable to factor
+  nplot <- nlevels(s1.db$PLOT)						# get number of plots
+  est.lam.df <- as.data.frame(matrix(nrow = Age.mature, ncol = nplot, NA))	# create new database for estimated lambda values
+  names(est.lam.df) <- 1:nplot						# plot names
+  for (i in 1:nplot) {								# for each plot:
+    Mim.s.p <- subset(s1.db, PLOT == i & !is.na(ln.h2))			# get a subset of plot i omitting NA's
+    if (Mim.s.p$PLOT[1] != 5) {						# if plot number is 5 (mature forest):
+      if (all(!is.na(Mim.s.p$Age))) {					# if it is not an empty list:
+        lam.list <- c()							# create new empty list for lambda values
+        min.a <- min(Mim.s.p$Age, na.rm = TRUE)				# set maximum height for that plot
+        max.a <- max(Mim.s.p$Age, na.rm = TRUE)				# set minimum height for that plot
+        n.1.i <- which(Mim.s.p$Age == min.a)				# get row number of trees
+        n.1.h.i <- log(Mim.s.p[n.1.i,]$h2)[order(log(Mim.s.p[n.1.i,]$h2))] # get height of trees
+        init.n.a.v.i <- n.1.v.i <- hist(n.1.h.i, breaks = e.pred, plot = FALSE)$counts # get size structure vector and set initial vector
+        for (a in ((min.a+1):max.a)) {					# for every year:
+          n.a.v.i <- k.p.list[[as.integer(i)]][(a-min.a),,]%*%init.n.a.v.i # multiply size vector by plot kernel
+          lam.a.i <- sum(n.a.v.i)/sum(init.n.a.v.i)			# get lambda
+          init.n.a.v.i <- n.a.v.i					# reset initial vector
+          lam.list <- c(lam.list, lam.a.i)				# add lambda to list
         }
-       }
-     }
-     est.lam.list <- list(NA)							# create new list
-     for (i in 1:nplot) {							# for each plot
-      if (i != 5) {								# if nor plot 5 (not mature forest):
-        plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(est.lam.df[,i]) == TRUE)), ncol = 2)) # create new database for that plot
-        names(plot.l.i) <- c("Age", "lambda")					# name columns
-        plot.l.i$Age <- which(!is.na(est.lam.df[,i]))				# set ages
-        plot.l.i$lambda <- est.lam.df[,i][which(!is.na(est.lam.df[,i]) == TRUE)]# set lambda values
-        est.lam.list[[i]] <- plot.l.i 						# set plot number
-        } else {								# if it is plot 5:
-        plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))			# create new database
-        names(plot.l.5) <- c("Age", "lambda")					# name columns
-        plot.l.5$Age[1] <- Age.mature						# set age
-        plot.l.5$lambda[1] <- lam.mature					# set lambda value
-        est.lam.list[[5]] <- plot.l.5						# set plot
+        est.lam.df[(min.a+1):max.a, as.numeric(i)] <- lam.list		# fill database
       }
-     }
+    }
+  }
+  est.lam.list <- list(NA)							# create new list
+  for (i in 1:nplot) {							# for each plot
+    if (i != 5) {								# if nor plot 5 (not mature forest):
+      plot.l.i <- as.data.frame(matrix(nrow = length(which(!is.na(est.lam.df[,i]) == TRUE)), ncol = 2)) # create new database for that plot
+      names(plot.l.i) <- c("Age", "lambda")					# name columns
+      plot.l.i$Age <- which(!is.na(est.lam.df[,i]))				# set ages
+      plot.l.i$lambda <- est.lam.df[,i][which(!is.na(est.lam.df[,i]) == TRUE)]# set lambda values
+      est.lam.list[[i]] <- plot.l.i 						# set plot number
+    } else {								# if it is plot 5:
+      plot.l.5 <- as.data.frame(matrix(nrow = 1, ncol = 2))			# create new database
+      names(plot.l.5) <- c("Age", "lambda")					# name columns
+      plot.l.5$Age[1] <- Age.mature						# set age
+      plot.l.5$lambda[1] <- lam.mature					# set lambda value
+      est.lam.list[[5]] <- plot.l.5						# set plot
+    }
+  }
 }
 # observed lambda by plot
 {
@@ -421,377 +421,375 @@ library(fields)
   obs.N.total <- data.frame(Age.pred,N.list)
   names(obs.N.total) <- c("Age", "N")
   distance.N <- function(c) {
-  	  dist.N <- c()
-	  n.0 <- which(s1.db$Age == 0)	#
-     	  n.0.h <- log(s1.db[n.0,]$h2)	#
-     	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-     	  init.n.a.v <- n.0.v+c*F5
-	  pred.N.total <- c() # size structure vector by year, WM = with migration
-     	  for (a in 1:Age.mature) {
-       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-       		n.a.v <- n.a.v+c*F5
-        	pred.N.total <- c(pred.N.total, sum(n.a.v))
-       		init.n.a.v <- n.a.v			# add size structure
-       		}
-	  for (p in 1:nplot) {
-		dist.N.p <- 0
-		N.p <- obs.N.plot[[p]]
-		max.a <- max(N.p$Age)
-	        for (j in 1:nrow(N.p))
-			dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
-		dist.N.p <- sqrt(dist.N.p)
-		dist.N <- c(dist.N, dist.N.p)
-		}
-	        dist.N <- sqrt(sum(dist.N))
-	        cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
-  	        return(dist.N)
+    dist.N <- c()
+    n.0 <- which(s1.db$Age == 0)	#
+    n.0.h <- log(s1.db[n.0,]$h2)	#
+    n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    init.n.a.v <- n.0.v+c*F5
+    pred.N.total <- c() # size structure vector by year, WM = with migration
+    for (a in 1:Age.mature) {
+      n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+      n.a.v <- n.a.v+c*F5
+      pred.N.total <- c(pred.N.total, sum(n.a.v))
+      init.n.a.v <- n.a.v			# add size structure
+    }
+    for (p in 1:nplot) {
+      dist.N.p <- 0
+      N.p <- obs.N.plot[[p]]
+      max.a <- max(N.p$Age)
+      for (j in 1:nrow(N.p))
+      dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
+      dist.N.p <- sqrt(dist.N.p)
+      dist.N <- c(dist.N, dist.N.p)
+    }
+    dist.N <- sqrt(sum(dist.N))
+    cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
+    return(dist.N)
   }
 }
 # migration estimating function (for lambda)
 {
- distance.L <- function(c) {
-  	  dist.L <- c()
-	  n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
-     	  n.0.h <- log(s1.db[n.0,]$h2)	#
-     	  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-     	  init.n.a.v <- n.0.v+c*F5
-	  pred.L.total <- c() # size structure vector by year, WM = with migration
-     	  for (a in 1:Age.mature) {
-       		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-       		n.a.v <- n.a.v+c*F5
-		lam.p <- sum(n.a.v)/sum(init.n.a.v)
-        	pred.L.total <- c(pred.L.total, lam.p)
-       		init.n.a.v <- n.a.v			# add size structure
-       		}
-	  for (p in 1:nplot) {
-		dist.L.p <- 0
-		L.p <- obs.lam.plot[[p]]
-		max.a <- max(L.p$Age)
-	        for (j in 1:nrow(L.p))
-			dist.L.p <- dist.L.p + (L.p$lambda[j]-pred.L.total[max.a-nrow(L.p)+j])^2
-		dist.L.p <- sqrt(dist.L.p)
-		dist.L <- c(dist.L, dist.L.p)
-		}
-	        dist.L <- mean(dist.L)
-	        cat(paste0("c = ", c, ", dist = ", dist.L, "\n"))
-  	        return(dist.L)
+  distance.L <- function(c) {
+    dist.L <- c()
+    n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+    n.0.h <- log(s1.db[n.0,]$h2)	#
+    n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    init.n.a.v <- n.0.v+c*F5
+    pred.L.total <- c() # size structure vector by year, WM = with migration
+    for (a in 1:Age.mature) {
+      n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+      n.a.v <- n.a.v+c*F5
+      lam.p <- sum(n.a.v)/sum(init.n.a.v)
+      pred.L.total <- c(pred.L.total, lam.p)
+      init.n.a.v <- n.a.v			# add size structure
+    }
+    for (p in 1:nplot) {
+      dist.L.p <- 0
+      L.p <- obs.lam.plot[[p]]
+      max.a <- max(L.p$Age)
+      for (j in 1:nrow(L.p))
+      dist.L.p <- dist.L.p + (L.p$lambda[j]-pred.L.total[max.a-nrow(L.p)+j])^2
+      dist.L.p <- sqrt(dist.L.p)
+      dist.L <- c(dist.L, dist.L.p)
+    }
+    dist.L <- mean(dist.L)
+    cat(paste0("c = ", c, ", dist = ", dist.L, "\n"))
+    return(dist.L)
   }
 }
 # trying different estimators (for population size)
 {
-    opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
-    opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
-    opt.lbf <- optim(0, distance.N, method = "L-BFGS-B")
-    c <- opt.lbf$par # c = 9.35391449733551, dist = 81.8803596331657
-    opt.bfgs <- optim(0, distance.N, method = "BFGS")
-    opt.bfgs$par # c = 9.35491911006061, dist = 81.8803591350612
+  opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
+  opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
+  opt.lbf <- optim(0, distance.N, method = "L-BFGS-B")
+  c <- opt.lbf$par # c = 9.35391449733551, dist = 81.8803596331657
+  opt.bfgs <- optim(0, distance.N, method = "BFGS")
+  opt.bfgs$par # c = 9.35491911006061, dist = 81.8803591350612
 }
 # trying different estimators (for lambda)
 {
-     opt.brent <- optim(0, distance.L, method = "Brent", lower = 0, upper = 100000000)
-     opt.brent$par # c = 2.47619435505125, dist = 0.530052570070713
-     opt.lbf <- optim(0, distance.L, method = "L-BFGS-B")
-     opt.lbf$par # c = 2.47519458486379, dist = 0.530052570638488
-     opt.bfgs <- optim(0, distance.L, method = "BFGS")
-     opt.bfgs$par # c = 15.7093246924741, dist = 0.535953969391775
+  opt.brent <- optim(0, distance.L, method = "Brent", lower = 0, upper = 100000000)
+  opt.brent$par # c = 2.47619435505125, dist = 0.530052570070713
+  opt.lbf <- optim(0, distance.L, method = "L-BFGS-B")
+  opt.lbf$par # c = 2.47519458486379, dist = 0.530052570638488
+  opt.bfgs <- optim(0, distance.L, method = "BFGS")
+  opt.bfgs$par # c = 15.7093246924741, dist = 0.535953969391775
 }
 # migration
 {
   # total, no migration
   {
-       lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
-       lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
-         	theme_minimal() +
-    	    theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none") +
-    	    geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
-       lambda.edad
-       #ggsave("lambda.a.pdf", lambda.edad, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+    lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
+    lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
+      theme_minimal() +
+      theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none") +
+      geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
+      lambda.edad
+      #ggsave("lambda.a.pdf", lambda.edad, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
   }
   # by plot, no migration
   {
-   	 lambda.df.2.NM <- transform(lambda.df.NM)
-   	 p.lam.p.2 <- as.data.frame(matrix(nrow = 0, ncol = 2))
-   	 names(p.lam.p.2) <- c("Age", "lambda")
-   	 for (i in 1:nplot) {
-   		 p.lam.p.i <-transform(obs.lam.plot[[i]])
-   		 p.lam.p.2  <- rbind(p.lam.p.2, p.lam.p.i)
-   	 }
-   	 p.lam.ob <- ggplot(p.lam.p.2, aes(x = Age, y = lambda, alpha = 1/2), show.legend = FALSE) +
-   	 theme_minimal() +
-   	 geom_point(size = 1) +
-       	 theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) +
-   	 geom_line(data = lambda.df.NM, aes(x = Age, y = lambda), col = "red", size = 2, alpha = 1/3, show.legend = FALSE) +
-   	 geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
-  	 labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
-   	 scale_alpha(guide = "none") +
-  	 scale_y_continuous(limits = c(0, 3))
-   	 p.lam.ob
-   	 #ggsave("no-migration.pdf", p.lam.ob, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-   }
+    lambda.df.2.NM <- transform(lambda.df.NM)
+    p.lam.p.2 <- as.data.frame(matrix(nrow = 0, ncol = 2))
+    names(p.lam.p.2) <- c("Age", "lambda")
+    for (i in 1:nplot) {
+      p.lam.p.i <-transform(obs.lam.plot[[i]])
+      p.lam.p.2  <- rbind(p.lam.p.2, p.lam.p.i)
+    }
+    p.lam.ob <- ggplot(p.lam.p.2, aes(x = Age, y = lambda, alpha = 1/2), show.legend = FALSE) +
+      theme_minimal() +
+      geom_point(size = 1) +
+      theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) +
+      geom_line(data = lambda.df.NM, aes(x = Age, y = lambda), col = "red", size = 2, alpha = 1/3, show.legend = FALSE) +
+      geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
+      labs(x = expression(paste("Abandonment time ", italic(t), " (years)")), y = expression(lambda))+
+      scale_alpha(guide = "none") +
+      scale_y_continuous(limits = c(0, 3))
+      p.lam.ob
+      #ggsave("no-migration.pdf", p.lam.ob, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+  }
   # by plot, with migration
   {
-  	obs.lam.p <- as.data.frame(matrix(nrow = 0, ncol = 3))
-  	names(obs.lam.p) <- c("Age", "lambda", "plot")
-  	for (i in 1:nplot) {
-  		obs.lam.p.i <-transform(obs.lam.plot[[i]], plot = as.factor(i))
-  		obs.lam.p  <- rbind(obs.lam.p, obs.lam.p.i)
-  		}
-   # calculate new lambda list considering migration
-       	lam.list <- c()			# create lambda vector
-       	n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
-       	n.0.h <- log(s1.db[n.0,]$h2)	#
-       	n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-       	init.n.a.v <- n.0.v+c*F5
-  	size.v.a.WM <- list(init.n.a.v) # size structure vector by year, WM = with migration
-       	n.list <- c(sum(init.n.a.v))
-       	for (a in 1:Age.mature) {
-         		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-         		n.a.v <- n.a.v+c*F5
-         		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
-         		size.v.a.WM[[a+1]] <- n.a.v
-          	n.list <- c(n.list, sum(n.a.v))
-         		lam.list <- c(lam.list, lam.a)
-         		init.n.a.v <- n.a.v			# add size structure
-         		}
-          tot.lam.pred <- lam.list
-  	Age = rep(Age.pred,2)
-  	lambda = c(lambda.df.NM$lambda, lam.list)
-  	Migration = c(rep("no",100),rep("yes",100))
-  	lambda.df.2 <- data.frame(Age, lambda, Migration)
-  	plot.l.graf.c <- ggplot(lambda.df.2, aes(x = Age, y = lambda)) +
-  				theme_minimal() +
-  				xlab(expression(paste("Abandonment time ", italic(t), " (years)"))) +
-  				ylab(expression(lambda)) +
-  				theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) +
-  				geom_line(size = 2, alpha = 0.8, aes(color=Migration)) +
-  				geom_point(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
-  				geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
-  	 			scale_alpha(guide = "none") +
-  				scale_y_continuous(limits = c(0, 3))
-  	plot.l.graf.c
-  	#ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-  }
+    obs.lam.p <- as.data.frame(matrix(nrow = 0, ncol = 3))
+    names(obs.lam.p) <- c("Age", "lambda", "plot")
+    for (i in 1:nplot) {
+      obs.lam.p.i <-transform(obs.lam.plot[[i]], plot = as.factor(i))
+      obs.lam.p  <- rbind(obs.lam.p, obs.lam.p.i)
+    }
+    # calculate new lambda list considering migration
+    lam.list <- c()			# create lambda vector
+    n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
+    n.0.h <- log(s1.db[n.0,]$h2)	#
+    n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    init.n.a.v <- n.0.v+c*F5
+    size.v.a.WM <- list(init.n.a.v) # size structure vector by year, WM = with migration
+    n.list <- c(sum(init.n.a.v))
+    for (a in 1:Age.mature) {
+      n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+      n.a.v <- n.a.v+c*F5
+      lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+      size.v.a.WM[[a+1]] <- n.a.v
+      n.list <- c(n.list, sum(n.a.v))
+      lam.list <- c(lam.list, lam.a)
+      init.n.a.v <- n.a.v			# add size structure
+    }
+    tot.lam.pred <- lam.list
+    Age = rep(Age.pred,2)
+    lambda = c(lambda.df.NM$lambda, lam.list)
+    Migration = c(rep("no",100),rep("yes",100))
+    lambda.df.2 <- data.frame(Age, lambda, Migration)
+    plot.l.graf.c <- ggplot(lambda.df.2, aes(x = Age, y = lambda)) +
+      theme_minimal() +
+      xlab(expression(paste("Abandonment time ", italic(t), " (years)"))) +
+      ylab(expression(lambda)) +
+      theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 15)) +
+      geom_line(size = 2, alpha = 0.8, aes(color=Migration)) +
+      geom_point(data = obs.lam.p, aes(x = Age, y = lambda), alpha = 1/2, size = 1) +
+      geom_line(data = ob.lam.df, aes(x = Age, y = ob.lambda), col = "black", size = 2, alpha = 1/3, show.legend = FALSE) +
+      scale_alpha(guide = "none") +
+      scale_y_continuous(limits = c(0, 3))
+      plot.l.graf.c
+      #ggsave("with-migration.pdf", plot.l.graf.c, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+    }
 }
 # sensitivity
 {
   # function
- {
-   sensitivity <- function(mat, string, mod) {
-		if (string == 'S') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- mat*mod
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string ==  'G') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*(mat[a, j, i]*mod)
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F1') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- (mat[i, a]*mod)*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F2') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*(mat[i, a]*mod)*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F3') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*(mat[i, a]*mod)*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F4') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*(mat[a]*mod)
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F5') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    f.i.j.a[a, j, i] <- f.i.a[i, a]*(mat[j]*mod)
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
-				}
-				}
-			}
-		}
-		else if (string == 'F') {
-			k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
-			s.i.a <- S
-			f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
-			for (a in 1:Age.mature) {
-				for (i in 1:m) {
-				for (j in 1:m) {
-			    p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
-			    k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+(mat[a, j, i]*mod)
-				}
-				}
-			}
-		}
-		else {
-			return('wrong input: array')
-			break
-		}
-		# lambda
-		{
-			lam.list <- c()
-			n.0 <- which(s1.db$Age == 0)
-			n.0.h <- log(s1.db[n.0,]$h2)
-			n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-			init.n.a.v <- n.0.v+c*F5
-			n.list <- c(sum(init.n.a.v))
-			for (a in 1:Age.mature) {
-				n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-				n.a.v <- n.a.v+c*F5
-				lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
-				n.list <- c(n.list, sum(n.a.v))
-				lam.list <- c(lam.list, lam.a)
-				init.n.a.v <- n.a.v			# add size structure
-				}
-		}
-		return(lam.list)
-	}
- }
-	# sensitivity analysis
- {
-  	F <- f.i.j.a
-  	mod <- c(0.999,0.9999,0.99999,0.999999,1,1.000001,1.00001,1.0001,1.001)
-  	vrname <- list('S', 'G', 'F1', 'F2', 'F3', 'F4', 'F5', 'F')
-  	vrarray <- list(S, G, F1, F2, F3, F4, F5, F)
-  	for (i in (1:8)) { # 8 is the length of vrname & vrarray
-  		sens.i <- matrix(nrow = m, ncol = length(mod))
-  		for (j in 1:9) { # 9 is the length of mod
-  			sens.i[,j] <- sensitivity(vrarray[[i]], vrname[[i]], mod[j])
-  			assign(paste0('sens', vrname[i]), sens.i)
-  		}
-  	}
-  	sens.plot <- matrix(ncol = 3, nrow = length(mod)*length(vrname), NA)
-  	sens.l <- list(sensS, sensG, sensF1, sensF2, sensF3, sensF4, sensF5, sensF)
-  	for (i in 1:length(sens.l)) {
-  		for (j in 1:ncol(sens.l[[i]])) {
-  			sens.plot[((i-1)*length(mod)+1):(i*length(mod)),1] <- mod
-  			sens.plot[((i-1)*length(mod)+1):(i*length(mod)),2][j] <- mean(sens.l[[i]][,5])-mean(sens.l[[i]][,j]) # column 5 correspond to no modification
-  			#sens.plot[((i-1)*length(mod)+1):(i*length(mod)),3] <- rep(vrname[[i]], length(mod))
-  		}
-  	}
-  	sens.s.p <- as.data.frame(sens.plot[1:9,])
-  	colnames(sens.s.p) = c('mod','delta.lam','vr')
-  	plot(sens.s.p$mod, sens.s.p$delta.lam, type = 'l', col = 'black')
-
-  	sens.s.g <- as.data.frame(sens.plot[10:18,])
-  	colnames(sens.s.g) = c('mod','delta.lam','vr')
-  	lines(sens.s.g$mod, sens.s.g$delta.lam, col = 'red')
-
-  	sens.s.f <- as.data.frame(sens.plot[64:72,])
-  	colnames(sens.s.f) = c('mod','delta.lam','vr')
-  	lines(sens.s.f$mod, sens.s.f$delta.lam, col = 'blue')
+  {
+    sensitivity <- function(mat, string, mod) {
+      if (string == 'S') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- mat*mod
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string ==  'G') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*(mat[a, j, i]*mod)
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string == 'F1') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- (mat[i, a]*mod)*F2[i, a]*F3[i, a]*F4[a]
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string == 'F2') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- F1[i, a]*(mat[i, a]*mod)*F3[i, a]*F4[a]
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string == 'F3') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- F1[i, a]*F2[i, a]*(mat[i, a]*mod)*F4[a]
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string == 'F4') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*(mat[a]*mod)
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*F5[j]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string == 'F5') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            f.i.a[i, a] <- F1[i, a]*F2[i, a]*F3[i, a]*F4[a]
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              f.i.j.a[a, j, i] <- f.i.a[i, a]*(mat[j]*mod)
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+f.i.j.a[a, j, i]
+            }
+          }
+        }
+      }
+      else if (string == 'F') {
+        k.i.j.a <- s.i.j.a <- g.i.j.a <- p.i.j.a <- f.i.j.a <- F5.i.j.a <- array(NA, dim = c(Age.mature, m, m))
+        s.i.a <- S
+        f.i.a <- matrix(NA, nrow = m, ncol = Age.mature)
+        for (a in 1:Age.mature) {
+          for (i in 1:m) {
+            for (j in 1:m) {
+              p.i.j.a[a, j, i] <- s.i.a[i, a]*G[a, j, i]
+              k.i.j.a[a, j, i] <- p.i.j.a[a, j, i]+(mat[a, j, i]*mod)
+            }
+          }
+        }
+      }
+      else {
+        return('wrong input: array')
+        break
+      }
+      # lambda
+      {
+        lam.list <- c()
+        n.0 <- which(s1.db$Age == 0)
+        n.0.h <- log(s1.db[n.0,]$h2)
+        n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+        init.n.a.v <- n.0.v+c*F5
+        n.list <- c(sum(init.n.a.v))
+        for (a in 1:Age.mature) {
+          n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+          n.a.v <- n.a.v+c*F5
+          lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+          n.list <- c(n.list, sum(n.a.v))
+          lam.list <- c(lam.list, lam.a)
+          init.n.a.v <- n.a.v			# add size structure
+        }
+      }
+      return(lam.list)
+    }
+  }
+  # sensitivity analysis
+  {
+    F <- f.i.j.a
+    mod <- c(0.999,0.9999,0.99999,0.999999,1,1.000001,1.00001,1.0001,1.001)
+    vrname <- list('S', 'G', 'F1', 'F2', 'F3', 'F4', 'F5', 'F')
+    vrarray <- list(S, G, F1, F2, F3, F4, F5, F)
+    for (i in (1:8)) { # 8 is the length of vrname & vrarray
+      sens.i <- matrix(nrow = m, ncol = length(mod))
+      for (j in 1:9) { # 9 is the length of mod
+        sens.i[,j] <- sensitivity(vrarray[[i]], vrname[[i]], mod[j])
+        assign(paste0('sens', vrname[i]), sens.i)
+      }
+    }
+    sens.plot <- matrix(ncol = 3, nrow = length(mod)*length(vrname), NA)
+    sens.l <- list(sensS, sensG, sensF1, sensF2, sensF3, sensF4, sensF5, sensF)
+    for (i in 1:length(sens.l)) {
+      for (j in 1:ncol(sens.l[[i]])) {
+        sens.plot[((i-1)*length(mod)+1):(i*length(mod)),1] <- mod
+        sens.plot[((i-1)*length(mod)+1):(i*length(mod)),2][j] <- mean(sens.l[[i]][,5])-mean(sens.l[[i]][,j]) # column 5 correspond to no modification
+        #sens.plot[((i-1)*length(mod)+1):(i*length(mod)),3] <- rep(vrname[[i]], length(mod))
+      }
+    }
+    sens.s.p <- as.data.frame(sens.plot[1:9,])
+    colnames(sens.s.p) = c('mod','delta.lam','vr')
+    plot(sens.s.p$mod, sens.s.p$delta.lam, type = 'l', col = 'black')
+    sens.s.g <- as.data.frame(sens.plot[10:18,])
+    colnames(sens.s.g) = c('mod','delta.lam','vr')
+    lines(sens.s.g$mod, sens.s.g$delta.lam, col = 'red')
+    sens.s.f <- as.data.frame(sens.plot[64:72,])
+    colnames(sens.s.f) = c('mod','delta.lam','vr')
+    lines(sens.s.f$mod, sens.s.f$delta.lam, col = 'blue')
   }
 }
 # size structure & population size change over time
 {
-	pop.size.NM <- c()
-	pop.size.WM <- c()
-	size.v.a.NM.s <- list(NA) # size structure vector by age, NO MIGRATION, standardized
-	size.v.a.WM.s <- list(NA) # size structure vector by age, WITH MIGRATION, standardized
-	for (a in 1:(Age.mature+1)) {
-		pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))			# get population size
-		size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
-		pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
-		size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])
-		}
-	obs.N.total <- data.frame(N = c(NA,N.list), Age = c(0,Age.pred))
-	ps.df <- data.frame(Age = rep(c(0,Age.pred), 2), N = c(pop.size.NM, pop.size.WM), migration = c(rep("no",Age.mature+1), rep("yes", Age.mature+1)))
-	ps.plot <- ggplot(ps.df, aes(x = Age, y = N)) +
-		theme_minimal() +
-		xlab("Succesional age (years)") +
-		ylab("Projected population size") +
-		theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position="right") +
-		geom_line(aes(color = migration), size = 1) +
-		geom_point(data = obs.N.total, aes(x = Age, y = N))
-	ps.plot
-	#ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-	size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #
-	size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
-	zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
-	#pdf(file="size.str.NM.pdf",width=8,height=8)
-	hist3D(y = exp(x.pred), x = c(0,Age.pred), z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Successional age (years)", ylab = "Size (m)", zlab = "Density", zlim = c(0, zlim)
-	       #,theta = -90
-	       ,ticktype = "detailed"
-	       )
-	#dev.off()
-	#pdf(file="size.str.WM.pdf",width=8,height=8)
-	hist3D(y = exp(x.pred), x = c(0,Age.pred), z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Successional age (years)", ylab = "Size (m)", zlab = "Density", zlim = c(0, zlim)
-	       #,theta = -90
-	       ,ticktype = "detailed"
-	       )
-	#dev.off()
+  pop.size.NM <- c()
+  pop.size.WM <- c()
+  size.v.a.NM.s <- list(NA) # size structure vector by age, NO MIGRATION, standardized
+  size.v.a.WM.s <- list(NA) # size structure vector by age, WITH MIGRATION, standardized
+  for (a in 1:(Age.mature+1)) {
+    pop.size.NM <- c(pop.size.NM, sum(size.v.a.NM[[a]]))			# get population size
+    size.v.a.NM.s[[a]] <- size.v.a.NM[[a]]/sum(size.v.a.NM[[a]])		# standardized sized vector, NO MIGRATION
+    pop.size.WM <- c(pop.size.WM, sum(size.v.a.WM[[a]]))
+    size.v.a.WM.s[[a]] <- size.v.a.WM[[a]]/sum(size.v.a.WM[[a]])
+  }
+  obs.N.total <- data.frame(N = c(NA,N.list), Age = c(0,Age.pred))
+  ps.df <- data.frame(Age = rep(c(0,Age.pred), 2), N = c(pop.size.NM, pop.size.WM), migration = c(rep("no",Age.mature+1), rep("yes", Age.mature+1)))
+  ps.plot <- ggplot(ps.df, aes(x = Age, y = N)) +
+    theme_minimal() +
+    xlab("Succesional age (years)") +
+    ylab("Projected population size") +
+    theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position="right") +
+    geom_line(aes(color = migration), size = 1) +
+    geom_point(data = obs.N.total, aes(x = Age, y = N))
+    ps.plot
+    #ggsave("porjected-N.pdf", ps.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+  size.str.mat.NM.s <- matrix(unlist(size.v.a.NM.s), ncol = 100, byrow = TRUE) #
+  size.str.mat.WM.s <- matrix(unlist(size.v.a.WM.s), ncol = 100, byrow = TRUE)
+  zlim <- max(max(size.str.mat.NM.s), max(size.str.mat.WM.s))
+  #pdf(file="size.str.NM.pdf",width=8,height=8)
+  hist3D(y = exp(x.pred), x = c(0,Age.pred), z = size.str.mat.NM.s, col = "grey", border = "black", xlab = "Successional age (years)", ylab = "Size (m)", zlab = "Density", zlim = c(0, zlim)
+    #,theta = -90
+    ,ticktype = "detailed"
+    )
+  #dev.off()
+  #pdf(file="size.str.WM.pdf",width=8,height=8)
+  hist3D(y = exp(x.pred), x = c(0,Age.pred), z = size.str.mat.WM.s, col = "grey", border = "black", xlab = "Successional age (years)", ylab = "Size (m)", zlab = "Density", zlim = c(0, zlim)
+    #,theta = -90
+    ,ticktype = "detailed"
+    )
+  #dev.off()
 }
 # vital rates plots
 {
