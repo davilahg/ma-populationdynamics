@@ -1,7 +1,7 @@
 # Population dynamics of Mimosa acantholoba
 #
 setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
-# load requiered libraries: hola
+# load requiered libraries:
 # install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'reshape2', 'gridExtra', 'plot3D', 'fields'))
 library(AICcmodavg)
 library(betareg)
