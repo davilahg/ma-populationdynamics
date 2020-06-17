@@ -2,7 +2,7 @@
 #
 setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/")
 # load requiered libraries
-# install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'reshape2', 'gridExtra', 'plot3D', 'fields'))
+# #install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'reshape2', 'gridExtra', 'plot3D', 'fields'))
 library(AICcmodavg)
 library(betareg)
 library(EnvStats)
@@ -978,10 +978,10 @@ library(fields)
 		 scale_alpha(guide = "none") +
 		 geom_raster(aes(age.pred.f2, h1.pred.f2, fill = frt.n.pred, alpha = 0.35)) +
 		 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
-		 geom_point(data = real.rep.data, aes(Age, h1, color = TotFrut), size = 3, alpha = 0.5) +
+		 geom_point(data = real.rep.data, aes(Age, h1, color = TotFrut), size = 2, alpha = 0.5) +
 		 dev.new(width = 10, height = 8)
 		 g.f2.j
-	 #ggsave("f2.pdf", g.f2.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+	   #ggsave("f2.pdf", g.f2.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
  # Fecundity 3
  {
@@ -1005,7 +1005,7 @@ library(fields)
 	 scale_alpha(guide = "none") +
 	 geom_raster(aes(Age.pred, h1.pred.f3, fill = sd.n.pred, alpha = 0.35)) +
 	 scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
-	 geom_point(data = real.rep.data, aes(Age, h1, color = N.seed), size = 3, alpha = 0.5) +
+	 geom_point(data = real.rep.data, aes(Age, h1, color = N.seed), size = 2, alpha = 0.5) +
 	 dev.new(width = 10, height = 8)
 	 g.f3.j
 	 #ggsave("f3.pdf", g.f3.j, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
@@ -1026,14 +1026,14 @@ library(fields)
  }
  # Fecundity 5
  {
-  	f5.p.df <- data.frame(f5.db$Age, f5.db$h1)
-  	f5.p.gg <- ggplot(f5.p.df, aes(x=f5.db.h1)) +
-	    theme_minimal() +
-	    geom_histogram(aes(y=..density..), colour="black", fill="white")+
-	    geom_density(alpha=.2, fill="#FF6666") +
-	    theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
-	    xlab(expression(paste("Recruits height (m)"))) +
-	    ylab(expression("Density"))
-	f5.p.gg
-    	#ggsave("f5.pdf", f5.p.gg, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
+  f5.p.df <- data.frame(f5.db$Age, f5.db$h1)
+  f5.p.gg <- ggplot(f5.p.df, aes(x=f5.db.h1)) +
+    theme_minimal() +
+    geom_histogram(aes(y=..density..), colour="black", fill="white")+
+    geom_density(alpha=.2, fill="#FF6666") +
+    theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20, face = "bold"), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+    xlab(expression(paste("Recruits height (m)"))) +
+    ylab(expression("Density"))
+  f5.p.gg
+  #ggsave("f5.pdf", f5.p.gg, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
