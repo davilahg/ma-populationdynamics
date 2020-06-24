@@ -47,6 +47,19 @@ library(fields)
  nplot <- nlevels(s.db$PLOT)
  ex.pr <- exp(x.pred)
 }
+# x definitions using real scale
+{
+  min.h1 <- min(s.db$h1, na.rm = TRUE)-0.0001
+  min.h2 <- min(s.db$h1, na.rm = TRUE)-0.0001
+  max.h1 <- max(s.db$h1, na.rm = TRUE)+0.0001
+  max.h2 <- max(s.db$h2, na.rm = TRUE)+0.0001
+  E.pred <- log(seq(min(min.h1, min.h2), max(max.h1, max.h2), length.out = M+1))
+  h <- E.pred[2]-E.pred[1]
+  X.pred <- (E.pred[2:(M+1)]+E.pred[1:M])/2
+  e.pred <- seq(min(X.pred), max(X.pred), length.out = m+1)
+  x.pred <- (e.pred[2:(m+1)]+e.pred[1:m])/2
+  ex.pr <- exp(x.pred) ## is this necessary?
+}
 # modelling vital rates
 {
  glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), s.db, binomial) # survival: s
