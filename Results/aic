@@ -1,0 +1,52 @@
+# AIC
+
+grwoth
+
+Model selection based on AICc:
+
+      K     AICc Delta_AICc AICcWt Cum.Wt  Res.LL
+Mod1 11 -6298.35       0.00      1      1 3160.20  lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot)
+Mod2  7 -5955.72     342.63      0      1 2984.87  lmer(ln.h2~ln.h1*Age+(0+ln.h1| Census)+(0+ln.h1|plot)
+Mod3  6 -5951.53     346.82      0      1 2981.77  lmer(ln.h2~ln.h1+Age+(0+ln.h1| Census)+(0+Age|plot)
+Mod4  6 -5943.63     354.72      0      1 2977.82  lmer(ln.h2~ln.h1+Age+(0+ln.h1| Census)+(0+ln.h1|plot)
+
+
+survival
+
+> aictab(list(glmm.s.17.3, glmm.s.17.4))
+
+Model selection based on AICc:
+
+      K    AICc Delta_AICc AICcWt Cum.Wt       LL
+Mod2 10 3462.90       0.00      1      1 -1721.44   sup~ln.h1*Age+(1+ln.h1| Census)+(0+Age+ln.h1|plot)
+Mod1  8 3488.99      26.09      0      1 -1736.49   sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot)
+
+
+reproduction probability
+
+> aictab(list(glmm.f1.4.a, glmm.f1.4.b, glmm.f1.4.c))
+
+Model selection based on AICc:
+
+     K   AICc Delta_AICc AICcWt Cum.Wt     LL
+Mod3 5 157.84       0.00   0.44   0.44 -73.65   glmer(Rep~Age*ln.h1 + (1| plot), f1.db, binomial)
+Mod2 5 158.17       0.33   0.37   0.81 -73.82   glmer(Rep~Age*ln.h1 + (0 + ln.h1| plot), f1.db, binomial)
+Mod1 5 159.48       1.64   0.19   1.00 -74.47   glmer(Rep~Age*ln.h1 + (0 + Age| plot), f1.db, binomial)
+
+
+fruitset per tree
+
+> AICc(gam.f2.7$mer)    gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = poisson
+[1] 2446.773
+> AICc(gam.f2.8$mer)    gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (1 + ln.h1|plot), family = poisson
+[1] 2445.544
+
+seedset per fruit
+
+> aictab(list(glmm.f3.15, glmm.f3.17))
+
+Model selection based on AICc:
+
+     K   AICc Delta_AICc AICcWt Cum.Wt      LL
+Mod2 4 401.59       0.00   0.53   0.53 -196.58    N.seed~ln.h1+Age + (1| Plot), Seeds, poisson)
+Mod1 4 401.82       0.24   0.47   1.00 -196.70    N.seed~ln.h1+Age + (0 + ln.h1| Plot)
