@@ -47,19 +47,6 @@ library(fields)
  nplot <- nlevels(s.db$PLOT)
  ex.pr <- exp(x.pred)
 }
-# x definitions using real scale
-{
-  min.h1 <- min(s.db$h1, na.rm = TRUE)-0.0001
-  min.h2 <- min(s.db$h1, na.rm = TRUE)-0.0001
-  max.h1 <- max(s.db$h1, na.rm = TRUE)+0.0001
-  max.h2 <- max(s.db$h2, na.rm = TRUE)+0.0001
-  E.pred <- log(seq(min(min.h1, min.h2), max(max.h1, max.h2), length.out = M+1))
-  h <- E.pred[2]-E.pred[1]
-  X.pred <- (E.pred[2:(M+1)]+E.pred[1:M])/2
-  e.pred <- seq(min(X.pred), max(X.pred), length.out = m+1)
-  x.pred <- (e.pred[2:(m+1)]+e.pred[1:m])/2
-  ex.pr <- exp(x.pred) ## is this necessary?
-}
 # modelling vital rates
 {
  glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), s.db, binomial) # survival: s
@@ -433,11 +420,13 @@ library(fields)
 {
   obs.N.total <- data.frame(Age.pred,N.list)
   names(obs.N.total) <- c("Age", "N")
-  distance.N <- function(c) {
+  distance.N <- function(parm) {
     dist.N <- c()
     n.0 <- which(s1.db$Age == 0)	#
     n.0.h <- log(s1.db[n.0,]$h2)	#
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    b0 <- parm
+    c <- b0
     init.n.a.v <- n.0.v+c*F5
     pred.N.total <- c() # size structure vector by year, WM = with migration
     for (a in 1:Age.mature) {
@@ -452,11 +441,10 @@ library(fields)
       max.a <- max(N.p$Age)
       for (j in 1:nrow(N.p))
       dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
-      dist.N.p <- sqrt(dist.N.p)
       dist.N <- c(dist.N, dist.N.p)
     }
     dist.N <- sqrt(sum(dist.N))
-    cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
+    cat(paste0("b0 = ", b0, ", dist = ", dist.N, "\n"))
     return(dist.N)
   }
 }
@@ -493,9 +481,9 @@ library(fields)
 # trying different estimators (for population size)
 {
   opt.brent <- optim(0, distance.N, method = "Brent", lower = 0, upper = 100)
-  opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
-  opt.lbf <- optim(0, distance.N, method = "L-BFGS-B")
-  c <- opt.lbf$par # c = 9.35391449733551, dist = 81.8803596331657
+  c <- opt.brent$par # c = 9.35491439069071, dist = 81.8803591350505
+  opt.lbf <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+  par_c <- opt.lbf$par # c = 9.35391449733551, dist = 81.8803596331657
   opt.bfgs <- optim(0, distance.N, method = "BFGS")
   opt.bfgs$par # c = 9.35491911006061, dist = 81.8803591350612
 }
@@ -512,8 +500,8 @@ library(fields)
 {
   # total, no migration
   {
-    lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
-    lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
+     lambda.df.NM <- as.data.frame(list(lambda = lam.list.NM, Age = 1:Age.mature))
+     lambda.edad <- qplot(x = Age, y = log(lambda), data = lambda.df.NM, color = "red", geom = "line", xlab = "Succesional age (years)", ylab = expression(italic(r))) +
       theme_minimal() +
       theme(axis.text = element_text(size = 12), axis.title = element_text(size = 15), legend.text = element_text(size = 12), legend.title = element_text(size = 15), legend.position = "none") +
       geom_point(data = ob.lam.df, mapping = aes(x = Age, y = log(ob.lambda)))
@@ -554,11 +542,13 @@ library(fields)
     n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
     n.0.h <- log(s1.db[n.0,]$h2)	#
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    c <- exp(par_c[1])
     init.n.a.v <- n.0.v+c*F5
     size.v.a.WM <- list(init.n.a.v) # size structure vector by year, WM = with migration
     n.list <- c(sum(init.n.a.v))
     for (a in 1:Age.mature) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+      c <- exp(par_c[1] + par_c[2] * Age.pred[a])
       n.a.v <- n.a.v+c*F5
       lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
       size.v.a.WM[[a+1]] <- n.a.v
