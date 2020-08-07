@@ -1,3 +1,33 @@
+# migration estimating function (for population size) ## + c (1st year) ## type = 0
+{
+  obs.N.total <- data.frame(Age.pred,N.list)
+  names(obs.N.total) <- c("Age", "N")
+  distN_c <- function(parm) {
+    dist.N <- c()
+    n.0 <- which(s1.db$Age == 0)
+    n.0.h <- log(s1.db[n.0,]$h2)
+    n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    c <- parm
+    init.n.a.v <- n.0.v+c*F5
+    pred.N.total <- c()
+    for (a in 1:Age.mature) {
+      n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+      pred.N.total <- c(pred.N.total, sum(n.a.v))
+      init.n.a.v <- n.a.v
+    }
+    for (p in 1:nplot) {
+      dist.N.p <- 0
+      N.p <- obs.N.plot[[p]]
+      max.a <- max(N.p$Age)
+      for (j in 1:nrow(N.p))
+      dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
+      dist.N <- c(dist.N, dist.N.p)
+    }
+    dist.N <- sqrt(sum(dist.N))
+    cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
+    return(dist.N)
+  }
+}
 # migration estimating function (for population size) ## + b0 ## type = 1
 {
   obs.N.total <- data.frame(Age.pred,N.list)
@@ -177,7 +207,9 @@
     n.list <- c(sum(init.n.a.v))
     for (a in 1:Age.mature) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-      if (type == 1) {
+      if (type == 0) {
+        c <- par[1]
+      } else if (type == 1) {
         c <- par[1]
       } else if (type == 2) {
         c <- par[1] + Age.pred[a]*par[2]
@@ -204,16 +236,21 @@
     return(N_change)
   }
 }
-
 #
-opt.lbf <- optim(0, distN1, method = "L-BFGS-B", lower = 0, upper = 100)
+opt.lbf0 <- optim(0, distN_c, method = 'L-BFGS-B', lower = 0, upper = 1000)
+c_0 <- opt.lbf$par
 #
-for ()
-opt.lbf <- optim(c(0, -3), distN2, method = "L-BFGS-B", lower = c(0, -15), upper = c(50, 0))
-par2 <- opt.lbf$par
+opt.lbf1 <- optim(0, distN1, method = "L-BFGS-B", lower = 0, upper = 100)
+c_1 <- opt.lbf$par
 #
-opt.lbf <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+opt.lbf2 <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+c_2 <- opt.lbf$par
 #
-opt.lbf <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+opt.lbf3 <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+c_3 <- opt.lbf$par
 #
-opt.lbf <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+opt.lbf4 <- optim(c(5, -2, -2), distance.N, method = "plL-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+c_4 <- opt.lbf$par
+#
+opt.lbf4 <- optim(c(5, -2, -2), distance.N, method = "plL-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
+c_5 <- opt.lbf$par
