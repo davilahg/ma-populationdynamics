@@ -237,20 +237,26 @@
   }
 }
 #
+# + c (1st year) ## type = 0
 opt.lbf0 <- optim(0, distN_c, method = 'L-BFGS-B', lower = 0, upper = 1000)
 c_0 <- opt.lbf$par
 #
-opt.lbf1 <- optim(0, distN1, method = "L-BFGS-B", lower = 0, upper = 100)
-c_1 <- opt.lbf$par
+# + b0 ## type = 1
+opt.lbf1 <- optim(0, distN1, method = "L-BFGS-B", lower = 0, upper = 500)
+c_1 <- opt.lbf1$par
 #
-opt.lbf2 <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
-c_2 <- opt.lbf$par
+# + b0 + b1*Age ## type = 2
+opt.lbf2 <- optim(c(0, -2), distN2, method = "L-BFGS-B", lower = c(0, -15), upper = c(500, 5))
+c_2 <- opt.lbf2$par
 #
-opt.lbf3 <- optim(c(5, -2, -2), distance.N, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
-c_3 <- opt.lbf$par
+# + b0 + b1*Age - b2*Age**2 ## type = 3
+opt.lbf3 <- optim(c(0, -2, 1), distN3, method = "L-BFGS-B", lower = c(0, -15, -15), upper = c(500, 5, 5))
+c_3 <- opt.lbf3$par
 #
-opt.lbf4 <- optim(c(5, -2, -2), distance.N, method = "plL-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
-c_4 <- opt.lbf$par
+#  exp (+ b0 + b1*Age - b2*Age**2) ## type = 4
+opt.lbf4 <- optim(c(0, 1, 1), distN4, method = "L-BFGS-B", lower = c(0, -15, -5), upper = c(500, 5, 5))
+c_4 <- opt.lbf4$par
 #
-opt.lbf4 <- optim(c(5, -2, -2), distance.N, method = "plL-BFGS-B", lower = c(0, -15, -15), upper = c(50, 5, 5))
-c_5 <- opt.lbf$par
+# exp (+ b0 - b2*Age**2) ## type = 5
+opt.lbf5 <- optim(c(0, 1, 1), distN5, method = "L-BFGS-B", lower = c(0, -15), upper = c(500, 5))
+c_5 <- opt.lbf5$par
