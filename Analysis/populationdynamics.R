@@ -46,6 +46,10 @@ library(fields)
  f4.pred <- Age.pred <- 1:Age.mature
  nplot <- nlevels(s.db$PLOT)
  ex.pr <- exp(x.pred)
+ total_area <- 400 # m^2 per plot
+ understory_area <- 32 # m^2 per plot
+ total_plot_n <- 17
+ understory_plot_n <- 5
 }
 # modelling vital rates
 {
@@ -70,6 +74,10 @@ library(fields)
   			new.stb.n$SNB[which(new.stb.n$Age == stb.n$Age[i])] <- stb.n$SNB[i]
   		}
   	}
+    area_scale <- total_area / understory_area
+    plot_scale <- total_plot_n / understory_plot_n
+    total_scale <- area_scale*plot_scale
+    new.stb.n$SNB <- new.stb.n$SNB*total_scale
   	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # setting 0 to ages with register but no recruits
   	stb.n <- new.stb.n
   	stb.n <- transform(stb.n, Age = as.numeric(as.character(Age)))
@@ -88,7 +96,7 @@ library(fields)
   		stb.n.a <- stb.n$SNB[which(stb.n$Age == a)] # observed recruits number
   		f4.a[which(stb.n$Age == a)] <- stb.n.a/new.n.a # establishment probability from t-1 to t
   		}
-  	f4.a[which(f4.a == 0)] <- 0.00000001 # change 0 to perform beta regression
+  	f4.a[which(f4.a == 0)] <- 1e-7# change 0 to perform beta regression
   	x <- n.ages
   	gam.f4 <- gam(f4.a~s(x, k = 3), family = gaussian(log))
  }
