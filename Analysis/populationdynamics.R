@@ -258,7 +258,7 @@ library(fields)
   n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
   n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
   n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-  init.n.a.v <- n.0.v # rename vector
+  init.n.a.v <- n.0.v*total_scale # rename vector
   size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
   n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
   for (a in 1:Age.mature) {
