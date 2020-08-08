@@ -75,9 +75,7 @@ library(fields)
   		}
   	}
     area_scale <- total_area / understory_area
-    plot_scale <- total_plot_n / understory_plot_n
-    total_scale <- area_scale*plot_scale
-    new.stb.n$SNB <- new.stb.n$SNB*total_scale
+    new.stb.n$SNB <- new.stb.n$SNB*area_scale
   	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # setting 0 to ages with register but no recruits
   	stb.n <- new.stb.n
   	stb.n <- transform(stb.n, Age = as.numeric(as.character(Age)))
@@ -258,7 +256,7 @@ library(fields)
   n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
   n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
   n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-  init.n.a.v <- n.0.v*total_scale # rename vector
+  init.n.a.v <- n.0.v* # rename vector
   size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
   n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
   for (a in 1:Age.mature) {
@@ -550,14 +548,12 @@ library(fields)
     n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
     n.0.h <- log(s1.db[n.0,]$h2)	#
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-    c <- exp(par_c[1])
+    c <- c_0
     init.n.a.v <- n.0.v+c*F5
     size.v.a.WM <- list(init.n.a.v) # size structure vector by year, WM = with migration
     n.list <- c(sum(init.n.a.v))
     for (a in 1:Age.mature) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-      c <- exp(par_c[1] + par_c[2] * Age.pred[a])
-      n.a.v <- n.a.v+c*F5
       lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
       size.v.a.WM[[a+1]] <- n.a.v
       n.list <- c(n.list, sum(n.a.v))

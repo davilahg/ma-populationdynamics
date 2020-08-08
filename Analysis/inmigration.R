@@ -7,6 +7,7 @@
     n.0 <- which(s1.db$Age == 0)
     n.0.h <- log(s1.db[n.0,]$h2)
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    n.0.v <- n.0.v*total_scale
     c <- parm
     init.n.a.v <- n.0.v+c*F5
     pred.N.total <- c()
@@ -20,7 +21,7 @@
       N.p <- obs.N.plot[[p]]
       max.a <- max(N.p$Age)
       for (j in 1:nrow(N.p))
-      dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
+        dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
       dist.N <- c(dist.N, dist.N.p)
     }
     dist.N <- sqrt(sum(dist.N))
@@ -92,7 +93,7 @@
     return(dist.N)
   }
 }
-# migration estimating function (for population size) ## + b0 + b1*Age - b2*Age**2 ## type = 3
+# migration estimating function (for population size) ## + b0 + b1*Age + b2*Age**2 ## type = 3
 {
   distN3 <- function(parm) {
     dist.N <- c()
@@ -107,7 +108,7 @@
     pred.N.total <- c() # size structure vector by year, WM = with migration
     for (a in 1:Age.mature) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-      c <- b0 + b1 * Age.pred[a] - b2 * Age.pred[a]**2
+      c <- b0 + b1 * Age.pred[a] + b2 * Age.pred[a]**2
       n.a.v <- n.a.v+c*F5
       pred.N.total <- c(pred.N.total, sum(n.a.v))
       init.n.a.v <- n.a.v			# add size structure
@@ -158,7 +159,7 @@
     return(dist.N)
   }
 }
-# migration estimating function (for population size) ##  exp (+ b0 - b2*Age**2) ## type = 5
+# migration estimating function (for population size) ##  exp (+ b0 - b1*Age) ## type = 5
 {
   distN5 <- function(parm) {
     dist.N <- c()
@@ -166,13 +167,13 @@
     n.0.h <- log(s1.db[n.0,]$h2)	#
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
     b0 <- parm[1]
-    b2 <- parm[2]
+    b1 <- parm[2]
     c <- exp(b0)
     init.n.a.v <- n.0.v+c*F5
     pred.N.total <- c() # size structure vector by year, WM = with migration
     for (a in 1:Age.mature) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-      c <- exp(b0 - b2 * Age.pred[a]**2)
+      c <- exp(b0 - b1 * Age.pred[a])
       n.a.v <- n.a.v+c*F5
       pred.N.total <- c(pred.N.total, sum(n.a.v))
       init.n.a.v <- n.a.v			# add size structure
@@ -186,7 +187,7 @@
       dist.N <- c(dist.N, dist.N.p)
     }
     dist.N <- sqrt(sum(dist.N))
-    cat(paste0("b0 = ", " , b2 = ", b2,", dist = ", dist.N, "\n"))
+    cat(paste0("b0 = ", " , b1 = ", b1,", dist = ", dist.N, "\n"))
     return(dist.N)
   }
 }
@@ -197,6 +198,7 @@
     n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
     n.0.h <- log(s1.db[n.0,]$h2)	#
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    n.0.v <- n.0.v*total_scale
     if (type == 4 | type == 5) {
       c <- exp(par[1])
     } else {
@@ -208,17 +210,17 @@
     for (a in 1:Age.mature) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
       if (type == 0) {
-        c <- par[1]
+        c <- 0
       } else if (type == 1) {
         c <- par[1]
       } else if (type == 2) {
         c <- par[1] + Age.pred[a]*par[2]
       } else if (type == 3) {
-        c <- par[1] + Age.pred[a]*par[2] - Age.pred[a]*par[3]**2
+        c <- par[1] + Age.pred[a]*par[2] + par[3]*Age.pred[a]**2
       } else if (type == 4) {
-        c <- exp(par[1] + Age.pred[a]*par[2] - Age.pred[a]*par[3]**2)
+        c <- exp(par[1] + Age.pred[a]*par[2] + par[3]*Age.pred[a]**2)
       } else if (type == 5) {
-        c <- exp(par[1] - Age.pred[a]*par[2]**2)
+        c <- exp(par[1] + Age.pred[a]*par[2])
       } else {
         assert("Wrong type")
       }
@@ -238,7 +240,7 @@
 }
 #
 # + c (1st year) ## type = 0
-opt.lbf0 <- optim(0, distN_c, method = 'L-BFGS-B', lower = 0, upper = 1000)
+opt.lbf0 <- optim(11, distN_c, method = 'L-BFGS-B', lower = 0, upper = 1000)
 c_0 <- opt.lbf$par
 #
 # + b0 ## type = 1
