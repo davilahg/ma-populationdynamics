@@ -64,22 +64,22 @@ library(fields)
  den.f5$y <- den.f5$y/sum(den.f5$y)
  # gam.f4
  {
-  	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # get ages with register in understory data
-  	stb.n <- as.data.frame(table(f4.db$Age)) # get number of recruits per year
+  	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # edades donde se midió el sotobosque
+  	stb.n <- as.data.frame(table(f4.db$Age)) # reclutas registrados por año
   	names(stb.n) <- c("Age", "SNB") # SNB = recruits
   	und.ages <- as.numeric(levels(und.ages))
-  	new.stb.n <- data.frame(Age = und.ages[order(und.ages)], SNB = rep(NA, length(und.ages))) # create new dataframe
+  	new.stb.n <- data.frame(Age = und.ages[order(und.ages)], SNB = rep(NA, length(und.ages))) # crear nueva base de datos con todos los individuos y la edad sucesional
   	for (i in 1:nrow(stb.n)) { # order dataframe
   		if (stb.n$Age[i] == new.stb.n$Age[which(new.stb.n$Age == stb.n$Age[i])]) {
   			new.stb.n$SNB[which(new.stb.n$Age == stb.n$Age[i])] <- stb.n$SNB[i]
   		}
   	}
     area_scale <- total_area / understory_area
-    new.stb.n$SNB <- new.stb.n$SNB*area_scale
-  	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # setting 0 to ages with register but no recruits
+    new.stb.n$SNB <- new.stb.n$SNB*area_scale # escalar la cantidad de individuos
+  	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # asignar cantidad 0 a las parcelas con registro en el sotobosque pero sin reclutas
   	stb.n <- new.stb.n
   	stb.n <- transform(stb.n, Age = as.numeric(as.character(Age)))
-  	n.ages <- stb.n$Age
+  	n.ages <- stb.n$Age # edades donde se midió el sotobosque
   	f4.a <- rep(NA, length(n.ages)) # create new dataframe for establishment probability
   	for (a in n.ages) {
   		stb.a <- subset(s.db, Age == a) # create new data for each year
@@ -94,7 +94,7 @@ library(fields)
   		stb.n.a <- stb.n$SNB[which(stb.n$Age == a)] # observed recruits number
   		f4.a[which(stb.n$Age == a)] <- stb.n.a/new.n.a # establishment probability from t-1 to t
   		}
-  	f4.a[which(f4.a == 0)] <- 1e-7# change 0 to perform beta regression
+  	f4.a[which(f4.a == 0)] <- 1e-7 # change 0 to perform beta regression
   	x <- n.ages
   	gam.f4 <- gam(f4.a~s(x, k = 3), family = gaussian(log))
  }
@@ -256,7 +256,7 @@ library(fields)
   n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
   n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
   n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-  init.n.a.v <- n.0.v* # rename vector
+  init.n.a.v <- n.0.v*area_scale # rename vector
   size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
   n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
   for (a in 1:Age.mature) {
@@ -269,6 +269,7 @@ library(fields)
   	}
   tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
   prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
+  plot(Age.pred, tot.lam.pred, type = 'l')
 }
 # total observed lambda
 {

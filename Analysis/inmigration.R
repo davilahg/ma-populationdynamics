@@ -7,7 +7,7 @@
     n.0 <- which(s1.db$Age == 0)
     n.0.h <- log(s1.db[n.0,]$h2)
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-    n.0.v <- n.0.v*total_scale
+    n.0.v <- n.0.v*area_scale
     c <- parm
     init.n.a.v <- n.0.v+c*F5
     pred.N.total <- c()
@@ -198,7 +198,7 @@
     n.0 <- which(s1.db$Age == 0)	# get row numbers with age = 0
     n.0.h <- log(s1.db[n.0,]$h2)	#
     n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
-    n.0.v <- n.0.v*total_scale
+    n.0.v <- n.0.v*area_scale
     if (type == 4 | type == 5) {
       c <- exp(par[1])
     } else {
