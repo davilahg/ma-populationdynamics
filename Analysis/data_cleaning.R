@@ -5,27 +5,12 @@
 # Primero se necesita calcular la función g(), posteriormente usar esa función para
 # calcular el tamaño de los individuos una unidad de tiempo antes de su primer registro
 # y poder asignar ese valor de altura al de la supervivencia de la misma fila.
-#
-
-## LINUX
-setwd("/home/gerardo/MEGA/Tesis/Datos") # datos
-#setwd("/home/gerardo/MEGA/Tesis/Gráficas") # graficas
-## WINDOWS
-setwd("/Users/gdh/Documents/MEGA/Tesis/Datos")
-#setwd("/Users/gdh/Documents/MEGA/Tesis/Gráficas")
-## MAC
-setwd("/Users/gdh/Google\ Drive/L\ 2017\ Gerardo\ Dávila/Datos")
-#setwd("/Users/gdh/Google\ Drive/L\ 2017\ Gerardo\ Dávila/Gráficas")
-## EDGAR
-setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/Datos")
-#setwd("/Users/Edgar/Google\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila/Gráficas")
-
 
 # Ajustes a la base de datos
 {
  Age.mature <- 100
  M <- 20000 # big-matrix dimension
- MimDB <- read.csv("MimDB.csv")
+ MimDB <- read.csv("./Data/raw_data_canopy.csv")
  MimDB <- MimDB[which(MimDB$Species == "Mimosa acantholoba"), ]
  isa.rows <- which(MimDB$Plot != "ISA") # remover los datos con parcelas ISA y ISX, no se sabe la edad
  isx.rows <- which(MimDB$Plot != "ISX")

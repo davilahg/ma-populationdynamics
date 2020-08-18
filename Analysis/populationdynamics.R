@@ -50,6 +50,7 @@ library(fields)
  understory_area <- 32 # m^2 per plot
  total_plot_n <- 17
  understory_plot_n <- 5
+ area_scale <- total_area / understory_area
 }
 # modelling vital rates
 {
@@ -74,7 +75,6 @@ library(fields)
   			new.stb.n$SNB[which(new.stb.n$Age == stb.n$Age[i])] <- stb.n$SNB[i]
   		}
   	}
-    area_scale <- total_area / understory_area
     new.stb.n$SNB <- new.stb.n$SNB*area_scale # escalar la cantidad de individuos
   	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # asignar cantidad 0 a las parcelas con registro en el sotobosque pero sin reclutas
   	stb.n <- new.stb.n
@@ -270,6 +270,36 @@ library(fields)
   tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
   prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
   plot(Age.pred, tot.lam.pred, type = 'l')
+}
+# scaling observed lambda
+{
+  canopy <- read.csv("./Data/Additional/canopy_cleaned.csv")
+  understory <- read.csv("./Data/understory.csv")
+  total_n <- c()
+  understory_n <- c()
+  canopy_n <- c()
+  total_l <- c()
+  for (a in 0:100) {
+    canopy.a <- subset(MimDB, Age.census == a & Sup == 1)
+    understory.a <- subset(understory, Age == a & sup == 1)
+    canopy_n[a+1] <- sum(nrow(canopy.a))
+    understory_n[a+1] <- sum(nrow(understory.a))*area_scale
+    total_n[a+1]<- canopy_n[a+1] + understory_n[a+1]
+  }
+  for (a in Age.pred) {
+    if (total_n[a] != 0) {
+      lambda.a <- total_n[a+1] / total_n[a]
+    } else {
+      lambda.a <- NA
+    }
+    total_l[a] <- lambda.a
+  }
+  #pdf('n_change.pdf')
+  plot(0:100, total_n, type = 'b', col = 'blue', xlab = 'Succesional age (years)', ylab = 'N')
+  lines(0:100, canopy_n, type = 'b', col = 'red')
+  lines(0:100, understory_n, type = 'b',col = 'green')
+  lines(0:100, rep(0, 101), col = 'black')
+  #dev.off()
 }
 # total observed lambda
 {

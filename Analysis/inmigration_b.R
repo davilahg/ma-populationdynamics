@@ -1,8 +1,6 @@
 # migration estimating function (for population size) ## + c (1st year) ## type = 0
 {
-  obs.N.total <- data.frame(Age.pred,N.list)
-  names(obs.N.total) <- c("Age", "N")
-  distN_c <- function(parm) {
+  MSE_0 <- function(parm) {
     dist.N <- c()
     n.0 <- which(s1.db$Age == 0)
     n.0.h <- log(s1.db[n.0,]$h2)
@@ -11,23 +9,19 @@
     c <- parm
     init.n.a.v <- n.0.v+c*F5
     pred.N.total <- c()
-    for (a in 1:Age.mature) {
+    for (a in Age.pred) {
       n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
       pred.N.total <- c(pred.N.total, sum(n.a.v))
-      dit <-
       init.n.a.v <- n.a.v
     }
-    for (p in 1:nplot) {
-      dist.N.p <- 0
-      N.p <- obs.N.plot[[p]]
-      max.a <- max(N.p$Age)
-      for (j in 1:nrow(N.p))
-        dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
-      dist.N <- c(dist.N, dist.N.p)
+    tot_sqr <- 0
+    for (a in Age.pred) {
+      sqr <- (pred.N.total[a] - total_n[a])**2
+      tot_sqr <- sum(tot_sqr, sqr)
+      MSE <- sqrt(tot_sqr)
     }
-    dist.N <- sqrt(sum(dist.N))
-    cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
-    return(dist.N)
+    cat(paste0("c = ", c, ", MSE = ", MSE, "\n"))
+    return(MSE)
   }
 }
 # migration estimating function (for population size) ## + b0 ## type = 1
@@ -234,15 +228,15 @@
     }
     #plot
     n.list <- n.list[1:100]
-    N_change <- plot(Age.pred, N.list, type = 'l', col = 'red', xlab = 'successional age', ylab = 'pop. growth rate')
+    N_change <- plot(0:100, total_n, type = 'l', col = 'red', xlab = 'successional age', ylab = 'pop. growth rate')
     lines(Age.pred, n.list, col = 'blue')
     return(N_change)
   }
 }
 #
 # + c (1st year) ## type = 0
-opt.lbf0 <- optim(11, distN_c, method = 'L-BFGS-B', lower = 0, upper = 1000)
-c_0 <- opt.lbf$par
+opt.lbf0 <- optim(0, MSE_0, method = 'L-BFGS-B', lower = 0, upper = 1000)
+c_0 <- opt.lbf0$par
 #
 # + b0 ## type = 1
 opt.lbf1 <- optim(0, distN1, method = "L-BFGS-B", lower = 0, upper = 500)
