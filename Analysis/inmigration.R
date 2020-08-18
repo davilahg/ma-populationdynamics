@@ -29,6 +29,38 @@
     return(dist.N)
   }
 }
+# migration estimating function (for population size) ## + c (1st year) ## type = 0
+{
+  obs.N.total <- data.frame(Age.pred,N.list)
+  names(obs.N.total) <- c("Age", "N")
+  distN_c <- function(parm) {
+    dist.N <- c()
+    n.0 <- which(s1.db$Age == 0)
+    n.0.h <- log(s1.db[n.0,]$h2)
+    n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts
+    n.0.v <- n.0.v*area_scale
+    c <- parm
+    init.n.a.v <- n.0.v+c*F5
+    pred.N.total <- c()
+    for (a in 1:Age.mature) {
+      n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
+      pred.N.total <- c(pred.N.total, sum(n.a.v))
+      dit <-
+      init.n.a.v <- n.a.v
+    }
+    for (p in 1:nplot) {
+      dist.N.p <- 0
+      N.p <- obs.N.plot[[p]]
+      max.a <- max(N.p$Age)
+      for (j in 1:nrow(N.p))
+        dist.N.p <- dist.N.p + (N.p$N[j]-pred.N.total[max.a-nrow(N.p)+j])^2
+      dist.N <- c(dist.N, dist.N.p)
+    }
+    dist.N <- sqrt(sum(dist.N))
+    cat(paste0("c = ", c, ", dist = ", dist.N, "\n"))
+    return(dist.N)
+  }
+}
 # migration estimating function (for population size) ## + b0 ## type = 1
 {
   obs.N.total <- data.frame(Age.pred,N.list)
