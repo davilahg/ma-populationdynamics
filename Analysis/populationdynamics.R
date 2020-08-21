@@ -280,7 +280,7 @@ library(fields)
   canopy_n <- c()
   total_l <- c()
   for (a in 0:100) {
-    canopy.a <- subset(MimDB, Age.census == a & Sup == 1)
+    canopy.a <- subset(canopy, Age.census == a & Sup == 1)
     understory.a <- subset(understory, Age == a & sup == 1)
     canopy_n[a+1] <- sum(nrow(canopy.a))
     understory_n[a+1] <- sum(nrow(understory.a))*area_scale

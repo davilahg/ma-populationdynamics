@@ -186,7 +186,7 @@
     return(dist.N)
   }
 }
-# lambda plot function
+# N plot function
 {
   plot_N <- function(par, type) {
     lam.list <- c()			# create lambda vector

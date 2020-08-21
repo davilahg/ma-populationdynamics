@@ -10,7 +10,7 @@
 {
  Age.mature <- 100
  M <- 20000 # big-matrix dimension
- MimDB <- read.csv("./Data/raw_data_canopy.csv")
+ MimDB <- read.csv("./Data/Additional/raw_data_canopy.csv")
  MimDB <- MimDB[which(MimDB$Species == "Mimosa acantholoba"), ]
  isa.rows <- which(MimDB$Plot != "ISA") # remover los datos con parcelas ISA y ISX, no se sabe la edad
  isx.rows <- which(MimDB$Plot != "ISX")
