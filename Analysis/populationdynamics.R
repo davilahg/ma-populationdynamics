@@ -67,11 +67,11 @@ library(fields)
  f3.db$Plot <- as.factor(as.character(f3.db$Plot))
  glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| Plot), f3.db, poisson) # seed number per fruit: f3
  ## f5
- # density of recruits (special database) 
+ # -- density of recruits (special database) 
  den_recruits <- density(x = log(obs_recruitment$Altura), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
  den_recruits$y <- den_recruits$y/sum(den_recruits$y)
- plot(x.pred, den_recruits$y)
- # density of sprouts
+ plot(x.pred, den_recruits$y, type = 'l', col = 'blue')
+ # -- density of sprouts
  init_ages <- c(0, 1, 9, 23, 62)
  sprouts_h <- c()
  f5.db$plot <- as.factor(as.character(f5.db$plot))
@@ -84,6 +84,13 @@ library(fields)
 				sprouts_h <- c(sprouts_h, und_p_i$h1[1])	 
 	 }
  }
+ den_sprouts <- density(x = log(sprouts_h), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
+ den_sprouts$y <- den_sprouts$y/sum(den_sprouts$y)
+ lines(x.pred, den_sprouts$y, col = 'red')
+ # -- adding two densities
+ den_f5 <- den_recruits$y + den_sprouts$y
+ den_f5 <- den_f5/sum(den_f5)
+ lines(x.pred, den_f5, col = 'springgreen3')
  ## f4
  {
     f4.db$Age <- as.factor(as.character(f4.db$Age))
