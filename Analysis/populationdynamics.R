@@ -26,6 +26,7 @@ library(fields)
   f3.db <- read.csv("./Data/reproduction-seeds.csv")
   f4.db <- read.csv("./Data/establishment.csv")
   f5.db <- read.csv("./Data/understory.csv")
+  obs_recruitment <- read.csv('./Data/Additional/observed_recruitment.csv')
 }
 # definitions
 {
@@ -54,35 +55,58 @@ library(fields)
 }
 # modelling vital rates
 {
+ ## s
  glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), s.db, binomial) # survival: s
+ ## g
  lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), g.db) # growth: g
+ ## f1
  glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), f1.db, binomial) # reproduction probability: f1
+ ## f2
  gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = f2.db) # fruit number per individual: f2
+ ## f3
  f3.db$Plot <- as.factor(as.character(f3.db$Plot))
  glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| Plot), f3.db, poisson) # seed number per fruit: f3
- den.f5 <- density(x = f5.db$h1, n = m, na.rm = TRUE, from = min(f5.db$h1, na.rm = TRUE), to = max(exp(max.lh1), exp(max.lh2)))
- den.f5$y[74:100] <- 0 # no probability of individuals higher than 3.2 m (maximum observed height of understory)
- den.f5$y <- den.f5$y/sum(den.f5$y)
- # gam.f4
+ ## f5
+ # -- density of recruits (special database) 
+ den_recruits <- density(x = log(obs_recruitment$Altura), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
+ den_recruits$y <- den_recruits$y/sum(den_recruits$y)
+ plot(x.pred, den_recruits$y, type = 'l', col = 'blue')
+ # -- density of sprouts
+ init_ages <- c(0, 1, 9, 23, 62)
+ sprouts_h <- c()
+ f5.db$plot <- as.factor(as.character(f5.db$plot))
+ for (p in levels(f5.db$plot)) {
+	 und_p <- droplevels(subset(f5.db, plot == p))
+	 for (i in levels(und_p$Tag)) {
+		 und_p_i <- subset(und_p, Tag == i)
+		 if (nrow(und_p_i) > 0)
+			if(!any(und_p_i$Age[1] == init_ages) & !is.na(und_p_i$DB3[1]))
+				sprouts_h <- c(sprouts_h, und_p_i$h1[1])	 
+	 }
+ }
+ den_sprouts <- density(x = log(sprouts_h), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
+ den_sprouts$y <- den_sprouts$y/sum(den_sprouts$y)
+ lines(x.pred, den_sprouts$y, col = 'red')
+ # -- adding two densities
+ den_f5 <- den_recruits$y + den_sprouts$y
+ den_f5 <- den_f5/sum(den_f5)
+ lines(x.pred, den_f5, col = 'springgreen3')
+ ## f4
  {
-  	und.ages <- f4.db$Age <- as.factor(as.character(f4.db$Age)) # edades donde se midió el sotobosque
-  	stb.n <- as.data.frame(table(f4.db$Age)) # reclutas registrados por año
-  	names(stb.n) <- c("Age", "SNB") # SNB = recruits
-  	und.ages <- as.numeric(levels(und.ages))
-  	new.stb.n <- data.frame(Age = und.ages[order(und.ages)], SNB = rep(NA, length(und.ages))) # crear nueva base de datos con todos los individuos y la edad sucesional
-  	for (i in 1:nrow(stb.n)) { # order dataframe
-  		if (stb.n$Age[i] == new.stb.n$Age[which(new.stb.n$Age == stb.n$Age[i])]) {
-  			new.stb.n$SNB[which(new.stb.n$Age == stb.n$Age[i])] <- stb.n$SNB[i]
-  		}
-  	}
-    new.stb.n$SNB <- new.stb.n$SNB*area_scale # escalar la cantidad de individuos
-  	new.stb.n$SNB[which(is.na(new.stb.n$SNB) == TRUE)] <- 0 # asignar cantidad 0 a las parcelas con registro en el sotobosque pero sin reclutas
-  	stb.n <- new.stb.n
-  	stb.n <- transform(stb.n, Age = as.numeric(as.character(Age)))
-  	n.ages <- stb.n$Age # edades donde se midió el sotobosque
+    f4.db$Age <- as.factor(as.character(f4.db$Age))
+    und.ages <- as.numeric(levels(f4.db$Age))
+    x <- und.ages[order(und.ages)]
+    new.stb.n <- as.data.frame(matrix(ncol = 2, nrow = length(x)))
+    names(new.stb.n) <- c('age', 'SNB')
+    for (a in 1:length(x)) {
+      new.stb.n$age[a] <- x[a]
+      new.stb.n$SNB[a] <- nrow(subset(f4.db, Age == x[a] & sup == 1)) * area_scale
+    }
+    stb.n <- new.stb.n
+  	n.ages <- stb.n$age # edades donde se midió el sotobosque
   	f4.a <- rep(NA, length(n.ages)) # create new dataframe for establishment probability
-  	for (a in n.ages) {
-  		stb.a <- subset(s.db, Age == a) # create new data for each year
+  	for (a in x) {
+  		stb.a <- subset(s.db, Age == a & sup == 1) # create new data for each year
   		n.str.a <- as.data.frame(cbind(x.pred, hist(log(as.numeric(as.character(stb.a$h1))), breaks = e.pred, plot = FALSE)$counts))
   		names(n.str.a) <- c("ln.h1", "n")
   		n.vec.a <- n.str.a$ln.h1
@@ -91,94 +115,93 @@ library(fields)
   		pred.f3.a <- predict(glmm.f3, newdata = data.frame(ln.h1 = x.pred, Age = rep(a-1, length(x.pred))), type = "response", re.form = NA)
   		pred.f.a <- pred.f1.a*pred.f2.a*pred.f3.a # predicting and multiplying reproduction functions
   		new.n.a <- sum(pred.f.a) # seed number produced in t-1
-  		stb.n.a <- stb.n$SNB[which(stb.n$Age == a)] # observed recruits number
-  		f4.a[which(stb.n$Age == a)] <- stb.n.a/new.n.a # establishment probability from t-1 to t
+  		stb.n.a <- stb.n$SNB[which(stb.n$age == a)] # observed recruits number
+  		f4.a[which(stb.n$age == a)] <- stb.n.a/new.n.a # establishment probability from t-1 to t
   		}
   	f4.a[which(f4.a == 0)] <- 1e-7 # change 0 to perform beta regression
-  	x <- n.ages
   	gam.f4 <- gam(f4.a~s(x, k = 3), family = gaussian(log))
  }
 }
 # discretizing vital rates functions
 {
- # g array
- GGG <- matrix(NA, ncol = Age.mature, nrow = M)
- for (a in 1:Age.mature)
-  GGG[, a] <- predict(lmm.g, newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), type = "response", re.form = NA)
- MUG <- matrix(NA, ncol = Age.mature, nrow = m)
- for (a in 1:Age.mature) {
-  init.g <- 1
-  for (i in 1:m) {
-     MUG[i, a] <- mean(GGG[init.g:(init.g+sM-1), a])
-   init.g <- init.g + sM
-  }
- }
- sdg <- sigma(lmm.g)
- G <- array(NA, dim = c(Age.mature, m, m))
- for (a in 1:Age.mature) {
-  for (i in 1:m) {
-   G[a, 1, i] <- pnorm(e.pred[2], MUG[i, a], sdg)
-   for (j in 2:(m-1))
-    G[a, j, i] <- pnorm(e.pred[j+1], MUG[i, a], sdg) - pnorm(e.pred[j], MUG[i, a], sdg)
-   G[a, m, i] <- 1-pnorm(e.pred[m], MUG[i, a], sdg) # avoiding probability eviction
-  }
- }
- # s matrix
- SSS <- matrix(NA, ncol = Age.mature, nrow = M)
- for (a in 1:Age.mature)
-  SSS[ ,a] <- predict(glmm.s, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
- MUS <- matrix(NA, ncol = Age.mature, nrow = m)
- for (a in 1:(Age.mature)) {
-  init.s <- 1
-  for (i in 1:m) {
-     MUS[i, a] <- mean(SSS[init.s:(init.s+sM-1), a])
-     init.s <- init.s + sM
-  }
- }
- S <- MUS
- # f1 matrix
- FF1 <- matrix (NA, nrow = M, ncol = Age.mature)
- for (a in 1:Age.mature)
-  FF1[ ,a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
- MUF1 <- matrix(NA, ncol = Age.mature, nrow = m)
- for (a in 1:Age.mature) {
-    init.f1 <- 1
+   # g array
+   GGG <- matrix(NA, ncol = Age.mature, nrow = M)
+   for (a in 1:Age.mature)
+    GGG[, a] <- predict(lmm.g, newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), type = "response", re.form = NA)
+   MUG <- matrix(NA, ncol = Age.mature, nrow = m)
+   for (a in 1:Age.mature) {
+    init.g <- 1
     for (i in 1:m) {
-     MUF1[i, a] <- mean(FF1[init.f1:(init.f1+sM-1), a])
-     init.f1 <- init.f1 + sM
-  }
- }
- F1 <- MUF1
- # f2 matrix
- FF2 <- matrix (NA, nrow = M, ncol = Age.mature)
- for (a in 1:Age.mature)
-  FF2[ ,a] <- predict(gam.f2$gam, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
- MUF2 <- matrix(NA, ncol = Age.mature, nrow = m)
- for (a in 1:Age.mature) {
-    init.f2 <- 1
+       MUG[i, a] <- mean(GGG[init.g:(init.g+sM-1), a])
+     init.g <- init.g + sM
+    }
+   }
+   sdg <- sigma(lmm.g)
+   G <- array(NA, dim = c(Age.mature, m, m))
+   for (a in 1:Age.mature) {
     for (i in 1:m) {
-     MUF2[i, a] <- mean(FF2[init.f2:(init.f2+sM-1), a])
-     init.f2 <- init.f2 + sM
-  }
- }
- F2 <- MUF2
- # f3 matrix
- FF3 <- matrix (NA, nrow = M, ncol = Age.mature)
- for (a in 1:Age.mature)
-  FF3[ ,a] <- predict(glmm.f3, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
- MUF3 <- matrix(NA, ncol = Age.mature, nrow = m)
- for (a in 1:Age.mature) {
-    init.f3 <- 1
+     G[a, 1, i] <- pnorm(e.pred[2], MUG[i, a], sdg)
+     for (j in 2:(m-1))
+      G[a, j, i] <- pnorm(e.pred[j+1], MUG[i, a], sdg) - pnorm(e.pred[j], MUG[i, a], sdg)
+     G[a, m, i] <- 1-pnorm(e.pred[m], MUG[i, a], sdg) # avoiding probability eviction
+    }
+   }
+   # s matrix
+   SSS <- matrix(NA, ncol = Age.mature, nrow = M)
+   for (a in 1:Age.mature)
+    SSS[ ,a] <- predict(glmm.s, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+   MUS <- matrix(NA, ncol = Age.mature, nrow = m)
+   for (a in 1:(Age.mature)) {
+    init.s <- 1
     for (i in 1:m) {
-     MUF3[i, a] <- mean(FF3[init.f3:(init.f3+sM-1), a])
-     init.f3 <- init.f3 + sM
-  }
- }
- F3 <- MUF3
- # f4 vector
- F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
- # f5 vector
- F5 <- den.f5$y
+       MUS[i, a] <- mean(SSS[init.s:(init.s+sM-1), a])
+       init.s <- init.s + sM
+    }
+   }
+   S <- MUS
+   # f1 matrix
+   FF1 <- matrix (NA, nrow = M, ncol = Age.mature)
+   for (a in 1:Age.mature)
+    FF1[ ,a] <- predict(glmm.f1, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+   MUF1 <- matrix(NA, ncol = Age.mature, nrow = m)
+   for (a in 1:Age.mature) {
+      init.f1 <- 1
+      for (i in 1:m) {
+       MUF1[i, a] <- mean(FF1[init.f1:(init.f1+sM-1), a])
+       init.f1 <- init.f1 + sM
+    }
+   }
+   F1 <- MUF1
+   # f2 matrix
+   FF2 <- matrix (NA, nrow = M, ncol = Age.mature)
+   for (a in 1:Age.mature)
+    FF2[ ,a] <- predict(gam.f2$gam, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+   MUF2 <- matrix(NA, ncol = Age.mature, nrow = m)
+   for (a in 1:Age.mature) {
+      init.f2 <- 1
+      for (i in 1:m) {
+       MUF2[i, a] <- mean(FF2[init.f2:(init.f2+sM-1), a])
+       init.f2 <- init.f2 + sM
+    }
+   }
+   F2 <- MUF2
+   # f3 matrix
+   FF3 <- matrix (NA, nrow = M, ncol = Age.mature)
+   for (a in 1:Age.mature)
+    FF3[ ,a] <- predict(glmm.f3, type = "response", newdata = data.frame(ln.h1 = X.pred, Age = rep(a-1, M)), re.form = NA)
+   MUF3 <- matrix(NA, ncol = Age.mature, nrow = m)
+   for (a in 1:Age.mature) {
+      init.f3 <- 1
+      for (i in 1:m) {
+       MUF3[i, a] <- mean(FF3[init.f3:(init.f3+sM-1), a])
+       init.f3 <- init.f3 + sM
+    }
+   }
+   F3 <- MUF3
+   # f4 vector
+   F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
+   # f5 vector
+   F5 <- den_f5
 }
 # creating kernel
 {
@@ -196,109 +219,87 @@ library(fields)
     }
    }
 }
-# kernel plots
+# scaling understory
 {
-  k.ages <- c(1,10,20,30,40,50,60,80,100)
-  zlim.k = c(0, max(k.i.j.a[,,]))
-  #pdf(file="kernel.a.pdf",width=8,height=8)
-  par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
-  for (a in k.ages) {
-  	if ( a != 100) {
-  		image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
-  	} else {
-  		image(ex.pr, ex.pr, k.i.j.a[a,,], zlim = zlim.k, xlab = "", ylab = "", main = "Mature forest")
-  	 }
-  	}
-  mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
-  mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-  #image.plot(legend.only=TRUE, zlim= zlim.k, col =  heat.colors(12),horizontal = F)
-  #dev.off()
-  # growth plots
-  zlim.g = c(0, max(G[,,]))
-  #pdf(file="G.a.pdf",width=8,height=8)
-  par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
-  for (a in k.ages) {
-  	if (a != 100) {
-  		image(ex.pr, ex.pr, G[a,,], zlim = zlim.g, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
-  	 } else {
-  		image(ex.pr, ex.pr, G[a,,], zlim = zlim.g, xlab = "", ylab = "", main = "Mature forest")
-  	 }
-  	}
-  mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
-  mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-  #image.plot(legend.only=TRUE, zlim= zlim.g, col =  heat.colors(12),horizontal = F)
-  #dev.off()
-  # p(x,y,t) = g(x,y,t)*s(x,t)
-  zlim.p = c(0, max(p.i.j.a[,,]))
-  #pdf(file="P.a.pdf",width=8,height=8)
-  par(mfrow=c(3,3), tcl=-0.5, family="serif", mai=c(0.3,0.3,0.3,0.3))
-  for (a in k.ages) {
-  	if (a != 100) {
-  		image(ex.pr, ex.pr, p.i.j.a[a,,], zlim = zlim.p, xlab = "", ylab = "", main = paste0("Successional age =  ", a))
-  	} else {
-  		image(ex.pr, ex.pr, p.i.j.a[a,,], zlim = zlim.p, xlab = "", ylab = "", main = "Mature forest")
-  	 }
-  	}
-  mtext(substitute(paste("Size ", italic(t))), side=1, outer=T, at=0.5)
-  mtext(substitute(paste("Size ", italic(t), " + 1")), side=2, outer=T, at=0.5)
-  #image.plot(legend.only=TRUE, zlim= zlim.p, col =  heat.colors(12),horizontal = F)
-  #dev.off()
-  # fecundity
-  zlim.f = c(0, max(f.i.a[,]))
-  #pdf(file="F.a.pdf",width=4,height=4)
-  image(ex.pr, 1:Age.mature, f.i.a, zlim = zlim.p, xlab = "", ylab = "", main = "")
-  #image.plot(legend.only=TRUE, zlim= zlim.f, col =  heat.colors(12),horizontal = F)
-  #dev.off()
+  # building gam for understory n
+  understory_n.gam_model.1 <- gam(round(stb.n$SNB)~s(log(x+1), k = 3), family = nb())
+  understory_n.gam_model.2 <- gam(round(stb.n$SNB)~s(log(x+1), k = 3), family = poisson)
+  understory_n.gam_model.3 <- gam(round(stb.n$SNB)~s(log(x+1), k = 5), family = nb())
+  understory_n.gam_model.4 <- gam(round(stb.n$SNB)~s(log(x+1), k = 7), family = nb())
+  understory_n.gam_model.5 <- gam(round(stb.n$SNB)~s(log(x+1), k = 10), family = nb())
+  #> AICc(understory_n.gam_model.1)
+  # [1] 443.6209
+  #> AICc(understory_n.gam_model.2)
+  #[1] 1528.83
+  #> AICc(understory_n.gam_model.3)
+  #[1] 436.3641
+  #> AICc(understory_n.gam_model.4)
+  #[1] 438.608
+  #> AICc(understory_n.gam_model.5)
+  #[1] 439.3461
+  #
+  plot(0:100, predict(understory_n.gam_model.1, newdata= data.frame(x=0:100), type = 'response'), type = 'l', col = 'black')
+  lines(0:100, predict(understory_n.gam_model.2, newdata= data.frame(x=0:100), type = 'response'), col = 'blue')
+  lines(0:100, predict(understory_n.gam_model.3, newdata= data.frame(x=0:100), type = 'response'), col = 'red')
+  lines(0:100, predict(understory_n.gam_model.4, newdata= data.frame(x=0:100), type = 'response'), col = 'green')
+  lines(0:100, predict(understory_n.gam_model.5, newdata= data.frame(x=0:100), type = 'response'), col = 'pink')
+  points(x, stb.n$SNB)
+  understory_n <- predict(understory_n.gam_model.3, newdata = data.frame(x = 0:100), type = "response")
 }
 # total predicted lambda
 {
   lam.list <- c()
-  n.0 <- which(s1.db$Age == 0) # get trees in first year (row number)
-  n.0.h <- log(s1.db[n.0,]$h2) # get hight ... since this dataframe has a new estimated h1, h2 is the observed first height for the first year
-  n.0.v <- hist(n.0.h, breaks = e.pred, plot = FALSE)$counts # count number of trees in each size class
-  init.n.a.v <- n.0.v*area_scale # rename vector
+  n.0 <- understory_n[1]
+  init.n.a.v <- n.0*F5
   size.v.a.NM <- list(init.n.a.v) # create list for size structure change, NM = no migration
-  n.list <- c(sum(init.n.a.v)) # create population size vector & setting first value
+  n.list <- c(sum(init.n.a.v))
   for (a in 1:Age.mature) {
        		n.a.v <- k.i.j.a[a,,]%*%init.n.a.v
-       		lam.a <- sum(n.a.v)/sum(init.n.a.v) # add c individuals
+       		lam.a <- sum(n.a.v)/sum(init.n.a.v)
        		size.v.a.NM[[a+1]] <- n.a.v
         	n.list <- c(n.list, sum(n.a.v))
        		lam.list <- c(lam.list, lam.a)
-       		init.n.a.v <- n.a.v			# add size structure
+       		init.n.a.v <- n.a.v
   	}
   tot.lam.pred <- lam.list.NM <- lam.list # lam.list is the transitory lambda vector
   prd.N.total <- data.frame(N = n.list, Age = c(0,Age.pred))
+  #pdf('lambda.pdf')
   plot(Age.pred, tot.lam.pred, type = 'l')
+  #dev.off()
 }
 # scaling observed lambda
 {
   canopy <- read.csv("./Data/Additional/canopy_cleaned.csv")
-  understory <- read.csv("./Data/understory.csv")
+  canopy$plot <- as.factor(as.character(canopy$plot))
+  canopy$Census <- as.factor(as.character(canopy$Census))
   total_n <- c()
-  understory_n <- c()
   canopy_n <- c()
   total_l <- c()
+  # getting n
   for (a in 0:100) {
-    canopy.a <- subset(canopy, Age.census == a & Sup == 1)
-    understory.a <- subset(understory, Age == a & sup == 1)
-    canopy_n[a+1] <- sum(nrow(canopy.a))
-    understory_n[a+1] <- sum(nrow(understory.a))*area_scale
-    total_n[a+1]<- canopy_n[a+1] + understory_n[a+1]
-  }
-  for (a in Age.pred) {
-    if (total_n[a] != 0) {
-      lambda.a <- total_n[a+1] / total_n[a]
+    canopy.a <- droplevels(subset(canopy, Age == a & sup == 1))
+    if (a == 100) {
+      can.n <- c()
+      for (i in levels(canopy.a$Census))
+        canopy.a.i <- subset(canopy.a, Census == i)
+        can.n <- c(nrow(canopy.a.i), can.n)
+      canopy_n[a+1] <- mean(can.n)
     } else {
-      lambda.a <- NA
+      if (nlevels(canopy.a$plot) > 1) {
+        canopy_n[a+1] <- sum(nrow(canopy.a)) / nlevels(canopy.a$plot)
+      } else {
+        canopy_n[a+1] <- sum(nrow(canopy.a))
+      }
     }
-    total_l[a] <- lambda.a
+    total_n[a+1] <- understory_n[a+1] + canopy_n[a+1] 
   }
-  #pdf('n_change.pdf')
+  # plotting n
+  #pdf('n_change_0.pdf')
   plot(0:100, total_n, type = 'b', col = 'blue', xlab = 'Succesional age (years)', ylab = 'N')
   lines(0:100, canopy_n, type = 'b', col = 'red')
   lines(0:100, understory_n, type = 'b',col = 'green')
   lines(0:100, rep(0, 101), col = 'black')
+  lines(0:100, n.list, col = 'goldenrod3')
   #dev.off()
 }
 # total observed lambda
@@ -345,7 +346,7 @@ library(fields)
   names(ob.lam.df) <- c("Age", "ob.lambda")		# naming database
   ob.lam.df$Age <- Age.pred			# set age range
   ob.lam.df$ob.lambda[Age.pred] <- ob.lam.list # set observed lambda value
-  lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plotting
+  lambda.df <- as.data.frame(list(lambda = lam.list, Age = 1:Age.mature)) # create lambda data frame for plottin
 }
 # predicted lambda by plot
 {
@@ -829,6 +830,16 @@ library(fields)
     )
   #dev.off()
 }
+# plotly saving images
+{
+  widget_file_size <- function(p) {
+  d <- tempdir()
+  withr::with_dir(d, htmlwidgets::saveWidget(p, "index.html"))
+  f <- file.path(d, "index.html")
+  mb <- round(file.info(f)$size / 1e6, 3)
+  message("File is: ", mb," MB")
+}
+}
 # vital rates plots
 {
  # definitions
@@ -951,7 +962,6 @@ library(fields)
 	 dev.new(width = 10, height = 8)
 	 g.mean.plot
 	 #ggsave("mean-growth.pdf", g.mean.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-	 }
  }
  # Fecundity 1
  {
@@ -1062,6 +1072,22 @@ library(fields)
 	 f4.p.a
 	 #ggsave("f4.pdf", f4.p.a, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
+ # understory n
+ { 
+   pred.understory_n.1 <- predict(understory_n.gam_model.1, newdata = data.frame(x = 0:100), type = "response")
+   pred.understory_n.2 <- predict(understory_n.gam_model.2, newdata = data.frame(x = 0:100), type = "response")
+   understory_n.line <- data.frame(Age = 0:100, n.1 = pred.understory_n.1, n.2 = pred.understory_n.2)
+	 understory_n.dots <- data.frame(Age = stb.n$age, n = stb.n$SNB)
+	 understory_n.plot <- ggplot() +
+		theme_minimal() +
+	 	theme(axis.text = element_text(size = 12), axis.title = element_text(size = 20), legend.text = element_text(size = 12), legend.title = element_text(size = 20)) +
+		xlab("Succesional age (years)") +
+		ylab("Understory population size") +
+		geom_point(data = understory_n.dots, aes(x = Age, y = n)) +
+    geom_line(data = understory_n.line, aes(x = Age, y = n.1), color = 'red') +
+    geom_line(data = understory_n.line, aes(x = Age, y = n.2), color = 'blue')
+	 understory_n.plot
+ }
  # Fecundity 5
  {
   f5.p.df <- data.frame(f5.db$Age, f5.db$h1)
@@ -1075,3 +1101,5 @@ library(fields)
   f5.p.gg
   #ggsave("f5.pdf", f5.p.gg, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
+}
+
