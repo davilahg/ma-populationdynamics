@@ -44,7 +44,7 @@ library(fields)
  sM <- M/m
  e.pred <- seq(min(X.pred), max(X.pred), length.out = m+1)
  x.pred <- (e.pred[2:(m+1)]+e.pred[1:m])/2
- f4.pred <- Age.pred <- 1:Age.mature
+ Age.pred <- 1:Age.mature
  nplot <- nlevels(s.db$PLOT)
  ex.pr <- exp(x.pred)
  total_area <- 400 # m^2 per plot
@@ -68,28 +68,46 @@ library(fields)
  glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| Plot), f3.db, poisson) # seed number per fruit: f3
  ## f5
  # -- density of recruits (special database) 
- den_recruits <- density(x = log(obs_recruitment$Altura), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
- den_recruits$y <- den_recruits$y/sum(den_recruits$y)
- plot(x.pred, den_recruits$y, type = 'l', col = 'blue')
+ den_recruits <- density(x = log(obs_recruitment$Altura), n = m, na.rm = TRUE, from= x.pred[1], to = x.pred[m])
+ pred_den <- approx(den_recruits$x, den_recruits$y, xout = x.pred)
+ den_recruits <- pred_den$y/sum(pred_den$y)
+ plot(x.pred, den_recruits, type = 'l', col = 'blue')
  # -- density of sprouts
- init_ages <- c(0, 1, 9, 23, 62)
+ #init_ages <- c(0, 1, 9, 23, 62)
  sprouts_h <- c()
  f5.db$plot <- as.factor(as.character(f5.db$plot))
  for (p in levels(f5.db$plot)) {
 	 und_p <- droplevels(subset(f5.db, plot == p))
 	 for (i in levels(und_p$Tag)) {
 		 und_p_i <- subset(und_p, Tag == i)
-		 if (nrow(und_p_i) > 0)
-			if(!any(und_p_i$Age[1] == init_ages) & !is.na(und_p_i$DB3[1]))
-				sprouts_h <- c(sprouts_h, und_p_i$h1[1])	 
+		 if (nrow(und_p_i) > 0) 
+			if(!(und_p_i$Age[1] == und_p_i$Age.init[1]) & !is.na(und_p_i$DB2[1])) {
+				sprouts_h <- c(sprouts_h, und_p_i$h1[1])
+        cat(paste0(und_p_i$Age[1], '\n'))	 
+      }
 	 }
  }
- den_sprouts <- density(x = log(sprouts_h), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
- den_sprouts$y <- den_sprouts$y/sum(den_sprouts$y)
- lines(x.pred, den_sprouts$y, col = 'red')
+ recruits_h <- c()
+ f5.db$plot <- as.factor(as.character(f5.db$plot))
+ for (p in levels(f5.db$plot)) {
+   und_p <- droplevels(subset(f5.db, plot == p))
+   for (i in levels(und_p$Tag)) {
+     und_p_i <- subset(und_p, Tag == i)
+     if (nrow(und_p_i) > 0)
+      if(!(und_p_i$Age[1] == und_p_i$Age.init[1]) & is.na(und_p_i$DB2[1])) {
+        recruits_h <- c(recruits_h, und_p_i$h1[1])
+        cat(paste0(und_p_i$Age[1], '\n'))     
+      }
+   }
+ }
+ rec_prop <- length(recruits_h)/sum(length(recruits_h), length(sprouts_h))
+
+ den_sprouts <- density(x = log(sprouts_h), n = m, na.rm = TRUE, from= x.pred[1], to = x.pred[m])
+ pred_den_s <- approx(den_sprouts$x, den_sprouts$y, xout = x.pred)
+ den_sprouts <- pred_den_s$y/sum(pred_den_s$y)
+ lines(x.pred, den_sprouts, col = 'red')
  # -- adding two densities
- den_f5 <- den_recruits$y + den_sprouts$y
- den_f5 <- den_f5/sum(den_f5)
+ den_f5 <- den_recruits*rec_prop + den_sprouts*(1-rec_prop)
  lines(x.pred, den_f5, col = 'springgreen3')
  ## f4
  {
@@ -199,7 +217,7 @@ library(fields)
    }
    F3 <- MUF3
    # f4 vector
-   F4 <- predict(gam.f4, newdata = data.frame(x = f4.pred), type = "response")
+   F4 <- predict(gam.f4, newdata = data.frame(x = Age.pred), type = "response")
    # f5 vector
    F5 <- den_f5
 }
