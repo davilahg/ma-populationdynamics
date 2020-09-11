@@ -26,6 +26,7 @@ library(fields)
   f3.db <- read.csv("./Data/reproduction-seeds.csv")
   f4.db <- read.csv("./Data/establishment.csv")
   f5.db <- read.csv("./Data/understory.csv")
+  obs_recruitment <- read.csv('./Data/Additional/observed_recruitment.csv')
 }
 # definitions
 {
@@ -54,24 +55,36 @@ library(fields)
 }
 # modelling vital rates
 {
- # s
+ ## s
  glmm.s <- glmer(sup~ln.h1*Age+(0+ln.h1| Census)+(0+Age+ln.h1|plot), s.db, binomial) # survival: s
- # g
+ ## g
  lmm.g <- lmer(ln.h2~ln.h1*Age+(1+ln.h1| Census)+(1+ln.h1|plot), g.db) # growth: g
- # f1
+ ## f1
  glmm.f1 <- glmer(Rep~Age*ln.h1 + (1| plot), f1.db, binomial) # reproduction probability: f1
- # f2
+ ## f2
  gam.f2 <- gamm4(TotFrut~t2(ln.h1, Age, k = 4), random = ~ (0 + Age + ln.h1|plot), family = negbin(1.179556), data = f2.db) # fruit number per individual: f2
- # f3
+ ## f3
  f3.db$Plot <- as.factor(as.character(f3.db$Plot))
  glmm.f3 <- glmer(N.seed~ln.h1+Age + (1| Plot), f3.db, poisson) # seed number per fruit: f3
- # f5
- understory_0 <- subset(f5.db, Age == 0)
- mean_h <- quantile(log(f4.db$h1), 0.2, na.rm = T)
- sd_h <- sd(log(understory_0$h1))
- den_f5 <- dnorm(x.pred, mean_h, sd_h)/sum(dnorm(x.pred, mean_h, sd_h))
- plot(x.pred, den_f5, type = 'l')
- # f4
+ ## f5
+ # density of recruits (special database) 
+ den_recruits <- density(x = log(obs_recruitment$Altura), n = m, na.rm = TRUE, from= min(obs_recruitment$Altura, na.rm = TRUE), to = max(max.lh1, max.lh2))
+ den_recruits$y <- den_recruits$y/sum(den_recruits$y)
+ plot(x.pred, den_recruits$y)
+ # density of sprouts
+ init_ages <- c(0, 1, 9, 23, 62)
+ sprouts_h <- c()
+ f5.db$plot <- as.factor(as.character(f5.db$plot))
+ for (p in levels(f5.db$plot)) {
+	 und_p <- droplevels(subset(f5.db, plot == p))
+	 for (i in levels(und_p$Tag)) {
+		 und_p_i <- subset(und_p, Tag == i)
+		 if (nrow(und_p_i) > 0)
+			if(!any(und_p_i$Age[1] == init_ages) & !is.na(und_p_i$DB3[1]))
+				sprouts_h <- c(sprouts_h, und_p_i$h1[1])	 
+	 }
+ }
+ ## f4
  {
     f4.db$Age <- as.factor(as.character(f4.db$Age))
     und.ages <- as.numeric(levels(f4.db$Age))
@@ -942,7 +955,6 @@ library(fields)
 	 dev.new(width = 10, height = 8)
 	 g.mean.plot
 	 #ggsave("mean-growth.pdf", g.mean.plot, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
-	 }
  }
  # Fecundity 1
  {
@@ -1082,3 +1094,5 @@ library(fields)
   f5.p.gg
   #ggsave("f5.pdf", f5.p.gg, device = "pdf", width = 9, height = 6, units = "in", dpi = 180*2)
  }
+}
+
