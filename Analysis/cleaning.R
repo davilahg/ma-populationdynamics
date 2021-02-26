@@ -56,7 +56,7 @@
  raw_canopy_data <- transform(raw_canopy_data, Age = 0) # setting ages per census year
  for (k in 1:nrow(raw_canopy_data)) {
 	 raw_canopy_data$Age[k] <- raw_canopy_data$Census[k] - raw_canopy_data$Fst_cens[k] + raw_canopy_data$Age_init[k]
-	 if (raw_canopy_data$Age[k] > Age.mature) { ### ??? dejar el bosque maduro en 100 años siempre o que siga corriendo la edad?
+	 if (raw_canopy_data$Age[k] > Age.mature) {
 	 	 raw_canopy_data$Age[k] <- Age.mature
 	 }
  }
@@ -72,12 +72,21 @@
  	new_canopy_data.i <- subset(raw_canopy_data, UID == i)
  	if (nrow(new_canopy_data.i) > 1) {
  		new_canopy_data.i <- new_canopy_data.i[order(new_canopy_data.i$Census), ]
- 		for (j in 1:nrow(new_canopy_data.i)) {
+ 		flag <- 1             
+ 		for (j in 1:nrow(new_canopy_data.i)) { ### arreglar los que reviven manualmente
  			if (new_canopy_data.i$Sup[j] == 0) { # Remove data following a registered 0 in survival. Sometimes there are trees wich are still being registered after death, resulting in more 0's than real and overestimating death probability
- 				new_canopy_data.i <- new_canopy_data.i[1:j+1, ]
-     break
+                if (flag == 1)
+                    flag <- 0
+ 				#new_canopy_data.i <- new_canopy_data.i[1:j, ]
+                #break
  			}
+ 			if (new_canopy_data.i$Sup[j] == 1)
+                if (flag == 0) {
+                    cat(paste0(new_canopy_data.i$UID[1], "\n"))   ##
+                    break
+                }
  		}
+    }
     if (nrow(new_canopy_data.i) > 1) {
   		new_canopy_data.i$sup[1:nrow(new_canopy_data.i)] <- new_canopy_data.i$Sup[1:nrow(new_canopy_data.i)]
   		new_canopy_data.i$h1[2:nrow(new_canopy_data.i)] <- new_canopy_data.i$Height[1:(nrow(new_canopy_data.i))-1]
