@@ -2,57 +2,39 @@
 ## data cleaning
 #
 {
- Age.mature <- 100 # mature forest age
- M <- 20000 # big-matrix dimension
- raw_canopy_data <- read.csv("./Data/raw_data/raw_canopy.csv")
- raw_canopy_data <- raw_canopy_data[which(raw_canopy_data$Species == "Mimosa acantholoba"), ]
- isa.rows <- which(raw_canopy_data$Plot != "ISA") # removing data from ISA and ISX, age is unknown
- isx.rows <- which(raw_canopy_data$Plot != "ISX")
- raw_canopy_data <- raw_canopy_data[isa.rows,]
- raw_canopy_data <- raw_canopy_data[isx.rows,]
- raw_canopy_data <- droplevels(raw_canopy_data)
- raw_canopy_data <- raw_canopy_data[!is.na(raw_canopy_data$Plot),]
- #raw_canopy_data$Height <- as.numeric(as.character(raw_canopy_data$Height))
- raw_canopy_data <- transform(raw_canopy_data, Age_init = 0, Fst_cens = 2003, Plot_code = NA)
- for (i in 1:nrow(raw_canopy_data)) {
-	 if (raw_canopy_data$Plot[i] == "DIV") {raw_canopy_data$Fst_cens[i] <- 2005}
- }
- for (j in 1:nrow(raw_canopy_data)) { # setting initial ages
-	 if (raw_canopy_data$Plot[j] == "RIC") {raw_canopy_data$Age_init[j] <- 30} #1 Ricardo
-	 else if (raw_canopy_data$Plot[j] == "ISP") {raw_canopy_data$Age_init[j] <- 23} #2 Isaìas Plano
-     else if (raw_canopy_data$Plot[j] == "SEP") {raw_canopy_data$Age_init[j] <- 40} #3 Severino Plano = Severino I
-	 else if (raw_canopy_data$Plot[j] == "ABE") {raw_canopy_data$Age_init[j] <- 10} #4 Abel
-	 else if (raw_canopy_data$Plot[j] == "SEL") {raw_canopy_data$Age_init[j] <- Age.mature} #5 Severino Loma = Severino II
-	 else if (raw_canopy_data$Plot[j] == "ISC") {raw_canopy_data$Age_init[j] <- 18} #6 Isaìas Carretera
-	 else if (raw_canopy_data$Plot[j] == "BES") {raw_canopy_data$Age_init[j] <- 11} #7 Bernardo
-	 else if (raw_canopy_data$Plot[j] == "TOA") {raw_canopy_data$Age_init[j] <- 0} #8 Toño Arriba = Toño de Leòn 0
-	 else if (raw_canopy_data$Plot[j] == "MAL") {raw_canopy_data$Age_init[j] <- 36} #9 Malaquìas
- 	 else if (raw_canopy_data$Plot[j] == "HIL") {raw_canopy_data$Age_init[j] <- 5} #10 Hilario
- 	 else if (raw_canopy_data$Plot[j] == "MAR") {raw_canopy_data$Age_init[j] <- 3} #11 Marciano
- 	 else if (raw_canopy_data$Plot[j] == "FID") {raw_canopy_data$Age_init[j] <- 9} #12 Wilfrido
- 	 else if (raw_canopy_data$Plot[j] == "ESS") {raw_canopy_data$Age_init[j] <- 16} #13 Escolar = Escolar Secundario
- 	 else if (raw_canopy_data$Plot[j] == "TOB") {raw_canopy_data$Age_init[j] <- 1} #14 Toño Abajo = Toño de Leòn I
- 	 else if (raw_canopy_data$Plot[j] == "DIA") {raw_canopy_data$Age_init[j] <- 7} #15 Dino agua caliente
-     else if (raw_canopy_data$Plot[j] == "DIV") {raw_canopy_data$Age_init[j] <- 56} #17 Dino Vàlvula
- }
- for (j in 1:nrow(raw_canopy_data)) { # setting plot codes
-	 if (raw_canopy_data$Plot[j] == "RIC") {raw_canopy_data$Plot_code[j] <- 1}
-	 else if (raw_canopy_data$Plot[j] == "ISP") {raw_canopy_data$Plot_code[j] <- 2}
-     else if (raw_canopy_data$Plot[j] == "SEP") {raw_canopy_data$Plot_code[j] <- 3}
-	 else if (raw_canopy_data$Plot[j] == "ABE") {raw_canopy_data$Plot_code[j] <- 4}
-	 else if (raw_canopy_data$Plot[j] == "SEL") {raw_canopy_data$Plot_code[j] <- 5}
-	 else if (raw_canopy_data$Plot[j] == "ISC") {raw_canopy_data$Plot_code[j] <- 6}
-	 else if (raw_canopy_data$Plot[j] == "BES") {raw_canopy_data$Plot_code[j] <- 7}
-	 else if (raw_canopy_data$Plot[j] == "TOA") {raw_canopy_data$Plot_code[j] <- 8}
-	 else if (raw_canopy_data$Plot[j] == "MAL") {raw_canopy_data$Plot_code[j] <- 9}
- 	 else if (raw_canopy_data$Plot[j] == "HIL") {raw_canopy_data$Plot_code[j] <- 10}
- 	 else if (raw_canopy_data$Plot[j] == "MAR") {raw_canopy_data$Plot_code[j] <- 11}
- 	 else if (raw_canopy_data$Plot[j] == "FID") {raw_canopy_data$Plot_code[j] <- 12}
- 	 else if (raw_canopy_data$Plot[j] == "ESS") {raw_canopy_data$Plot_code[j] <- 13}
- 	 else if (raw_canopy_data$Plot[j] == "TOB") {raw_canopy_data$Plot_code[j] <- 14}
- 	 else if (raw_canopy_data$Plot[j] == "DIA") {raw_canopy_data$Plot_code[j] <- 15}
-     else if (raw_canopy_data$Plot[j] == "DIV") {raw_canopy_data$Plot_code[i] <- 17}
- }
+    Age.mature <- 100 # mature forest age
+    M <- 20000 # big-matrix dimension
+    raw_canopy_data <- read.csv("./Data/raw_data/raw_canopy.csv")
+    raw_canopy_data <- raw_canopy_data[which(raw_canopy_data$Species == "Mimosa acantholoba"), ]
+    isa.rows <- which(raw_canopy_data$Plot != "ISA") # removing data from ISA and ISX, age is unknown
+    isx.rows <- which(raw_canopy_data$Plot != "ISX")
+    raw_canopy_data <- raw_canopy_data[isa.rows,]
+    raw_canopy_data <- raw_canopy_data[isx.rows,]
+    raw_canopy_data <- droplevels(raw_canopy_data)
+    raw_canopy_data <- raw_canopy_data[!is.na(raw_canopy_data$Plot),]
+    #raw_canopy_data$Height <- as.numeric(as.character(raw_canopy_data$Height))
+    raw_canopy_data <- transform(raw_canopy_data, Age_init = 0, Fst_cens = 2003)
+    for (i in 1:nrow(raw_canopy_data)) {
+        if (raw_canopy_data$Plot[i] == "DIV") {raw_canopy_data$Fst_cens[i] <- 2005}
+    }
+    for (j in 1:nrow(raw_canopy_data)) { # setting initial ages
+        if (raw_canopy_data$Plot[j] == "RIC") {raw_canopy_data$Age_init[j] <- 30} #1 Ricardo
+        else if (raw_canopy_data$Plot[j] == "ISP") {raw_canopy_data$Age_init[j] <- 23} #2 Isaìas Plano
+        else if (raw_canopy_data$Plot[j] == "SEP") {raw_canopy_data$Age_init[j] <- 40} #3 Severino Plano = Severino I
+        else if (raw_canopy_data$Plot[j] == "ABE") {raw_canopy_data$Age_init[j] <- 10} #4 Abel
+        else if (raw_canopy_data$Plot[j] == "SEL") {raw_canopy_data$Age_init[j] <- Age.mature} #5 Severino Loma = Severino II
+        else if (raw_canopy_data$Plot[j] == "ISC") {raw_canopy_data$Age_init[j] <- 18} #6 Isaìas Carretera
+        else if (raw_canopy_data$Plot[j] == "BES") {raw_canopy_data$Age_init[j] <- 11} #7 Bernardo
+        else if (raw_canopy_data$Plot[j] == "TOA") {raw_canopy_data$Age_init[j] <- 0} #8 Toño Arriba = Toño de Leòn 0
+        else if (raw_canopy_data$Plot[j] == "MAL") {raw_canopy_data$Age_init[j] <- 36} #9 Malaquìas
+        else if (raw_canopy_data$Plot[j] == "HIL") {raw_canopy_data$Age_init[j] <- 5} #10 Hilario
+        else if (raw_canopy_data$Plot[j] == "MAR") {raw_canopy_data$Age_init[j] <- 3} #11 Marciano
+        else if (raw_canopy_data$Plot[j] == "FID") {raw_canopy_data$Age_init[j] <- 9} #12 Wilfrido
+        else if (raw_canopy_data$Plot[j] == "ESS") {raw_canopy_data$Age_init[j] <- 16} #13 Escolar = Escolar Secundario
+        else if (raw_canopy_data$Plot[j] == "TOB") {raw_canopy_data$Age_init[j] <- 1} #14 Toño Abajo = Toño de Leòn I
+        else if (raw_canopy_data$Plot[j] == "DIA") {raw_canopy_data$Age_init[j] <- 7} #15 Dino agua caliente
+        else if (raw_canopy_data$Plot[j] == "DIV") {raw_canopy_data$Age_init[j] <- 56} #17 Dino Vàlvula
+    }
  raw_canopy_data <- transform(raw_canopy_data, Age = 0) # setting ages per census year
  for (k in 1:nrow(raw_canopy_data)) {
 	 raw_canopy_data$Age[k] <- raw_canopy_data$Census[k] - raw_canopy_data$Fst_cens[k] + raw_canopy_data$Age_init[k]
@@ -75,16 +57,16 @@
  		flag <- 1             
  		for (j in 1:nrow(new_canopy_data.i)) { ### arreglar los que reviven manualmente
  			if (new_canopy_data.i$Sup[j] == 0) { # Remove data following a registered 0 in survival. Sometimes there are trees wich are still being registered after death, resulting in more 0's than real and overestimating death probability
-                if (flag == 1)
-                    flag <- 0
- 				#new_canopy_data.i <- new_canopy_data.i[1:j, ]
-                #break
+                #if (flag == 1)
+                    #flag <- 0
+ 				new_canopy_data.i <- new_canopy_data.i[1:j, ]
+                break
  			}
- 			if (new_canopy_data.i$Sup[j] == 1)
-                if (flag == 0) {
-                    cat(paste0(new_canopy_data.i$UID[1], "\n"))   ##
-                    break
-                }
+ 			#if (new_canopy_data.i$Sup[j] == 1)
+                #if (flag == 0) {
+                    #cat(paste0(new_canopy_data.i$UID[1], "\n"))   ##
+                    #break
+                #}
  		}
     }
     if (nrow(new_canopy_data.i) > 1) {
@@ -94,51 +76,61 @@
         new_canopy_data <- rbind(new_canopy_data, new_canopy_data.i)
    }
   }
- }
  new_canopy_data <- transform(new_canopy_data, ln.h1 = log(h1), ln.h2 = log(h2), Age = Age)
- used_vars <- names(new_canopy_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "Plot_code", "sup", "UID", "Census")])
+ used_vars <- names(new_canopy_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "PlotCode", "sup", "UID", "Census")])
  canopy <- new_canopy_data[ ,used_vars]
  #write.table(canopy, file = "./Data/cleaned_data/canopy.csv", sep = ",", row.names = FALSE)
 }
 
-# Ajuste datos sotobosque
+# understory
 {
- understory <- read.csv("Sotobosque1.csv")
+ understory <- read.csv("./Data/raw_data/understory.csv")
  understory$Plot <- as.factor(as.character(understory$Plot))
- undtoa <- subset(understory, Plot == 8 | Plot == 8.1)
- undtoa <- subset(undtoa, Año < 2010)
- undtoa <- droplevels(undtoa)
- und <- subset(understory, Plot != 8 & Plot != 8.1)  #descartar los datos de la parcela TOA después del fuego (a partir de 2010)
- und <- droplevels(und)
- understory <- rbind(und, undtoa)
- understory <- transform(understory, id = as.factor(paste0("p", Plot, "i", Etiqueta)), ln.h1 = log(Altura), sup = rep(NA, nrow(understory)), h1 = rep(NA, nrow(understory)), h2 = rep(NA, nrow(understory)))
- understory <- subset(understory, Supv != "Exc" & Supv != "NE" )
+ understory <- transform(understory, h1 = rep(NA, nrow(understory)), sup = rep(NA, nrow(understory)), h2 = rep(NA, nrow(understory)), Age = Ecenso, PlotCode = Plot, Census = Año)
+ #understory <- understory[ ,used_vars]
+ understory <- subset(understory, Supv != "Exc" & Supv != "NE")
+ new_understory_data <- as.data.frame(matrix(NA, nrow = 0, ncol = ncol(understory)))
+ names(new_understory_data) <- names(understory)
  for (i in 1:nrow(understory))
     if (understory$Supv[i] == "Dosel") {understory$Supv[i] <- 1}
  understory <- droplevels(understory)
+ for (i in levels(understory$UID)) {
+    understory.i <- subset(understory, UID == i)
+    if (nrow(understory.i) > 1) {
+        for (j in 1:nrow(understory.i)) {
+            if (understory.i$Supv[j] == 0) {
+                understory.i <- understory.i[1:j, ]
+                break
+            }
+        }
+        if (nrow(understory.i) > 1) {
+            understory.i$sup[1:nrow(understory.i)] <- understory.i$Supv[1:nrow(understory.i)]
+            understory.i$h1[2:nrow(understory.i)] <- understory.i$Altura[1:(nrow(understory.i))-1]
+            understory.i$h2[1:nrow(understory.i)] <- understory.i$Altura[1:nrow(understory.i)]
+            new_understory_data <- rbind(new_understory_data, understory.i)
+        }
+    }
+ }
+ new_understory_data <- transform(new_understory_data, ln.h1 = log(h1), ln.h2 = log(h2))
+ understory <- new_understory_data[ ,used_vars]
+ #write.table(understory, file = "./Data/cleaned_data/understory.csv", sep = ",", row.names = FALSE)
+ complete_data <- rbind(canopy, understory)
+ #write.table(complete_data, file = "./Data/cleaned_data/complete_data.csv", sep = ",", row.names = FALSE)
+}
+
+
+
+
+
+
+
+
+
+ 
  und.00 <- as.data.frame(matrix(nrow = 0, ncol = ncol(understory)))
- for (i in levels(understory$id)) { # agregar un 0 a la supervivencia de los individuos que tienen puros 1s, agregarlo al final
-  	und.0 <- subset(understory, id == i)
-  	if (und.0$Supv[length(und.0$id)] == 1) {
-      newrow <- as.data.frame(matrix(nrow = 1, ncol = ncol(und.0))) # agregar una fila
-      names(newrow) <- names(und.0)
-      und.01 <- rbind(und.0, newrow)
-  		und.01[1] #agregar 0 al final de la columna de Supv, ahora hay que ver que si se murieron y revivieron todos los anteriores sean 1, intentar con elseif
-  		und.01$Año[nrow(und.01)] <- und.01$Año[nrow(und.01)]+1
-      und.01$Plot[nrow(und.01)] <- und.01$Plot[nrow(und.01)-1]
-      und.01$id[nrow(und.01)] <- und.01$id[nrow(und.01)-1]
-      und.01$Ecenso[nrow(und.01)] <- und.01$Ecenso[nrow(und.01)-1]+1
-      und.01$Supv[nrow(und.01)] <- 0
-  		print("1")
-  	    }
-  	else if (und.0$Supv[length(und.0$id)] == 0) {
-  		und.01 <- und.0
-  		print("0")
-  	    }
-   	und.00 <- rbind(und.00, und.01)
-  }
  und.00 <- transform(und.00, sup = rep(NA, nrow(und.00)), h1 = rep(NA, nrow(und.00)), h2 = rep(NA, nrow(und.00)))
  und.s <- as.data.frame(matrix(NA, nrow = 0, ncol = ncol(und.00)))
+ 
  for (i in levels(und.00$id)) {
  	und.id.s <- subset(und.00, id == i)
  	if (nrow(und.id.s) > 1) {
@@ -160,8 +152,8 @@
     if (und.s$sup[i] == 1) {und.s$sup[i] <- 0} else if (und.s$sup[i] == 2) {
       und.s$sup[i] <- 1
     }
-  und.s <- transform(und.s, ln.h1 = log(h1), ln.h2 = log(h2), Age = Ecenso, Census = Año, Plot_code = Plot) #All variables
-  und.S <- und.s[,c("ln.h1", "ln.h2", "sup", "Age", "Plot_code", "id", "Census", "h1", "h2")] #Only used variables
+  und.s <- transform(und.s, ln.h1 = log(h1), ln.h2 = log(h2), Age = Ecenso, Census = Año) #All variables
+  und.S <- und.s[,c("ln.h1", "ln.h2", "sup", "Age", "PlotCode", "id", "Census", "h1", "h2")] #Only used variables
   #write.table(und.s, file = "und.s.csv", sep = ",", row.names = FALSE)
   #write.table(und.S, file = "und.S.csv", sep = ",", row.names = FALSE)
 }

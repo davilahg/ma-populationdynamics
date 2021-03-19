@@ -1,0 +1,30 @@
+#g1 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+Age_scl*ln.h1_scl| Census)+(1+Age_scl*ln.h1_scl|PlotCode), growth)
+#g2 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+Age_scl+ln.h1_scl| Census)+(1+Age_scl+ln.h1_scl|PlotCode), growth)
+#g3 <- lmer(ln.h2_scl~ln.h1_scl+Age_scl+(0+Age_scl+ln.h1_scl| Census)+(0+Age_scl+ln.h1_scl|PlotCode), growth)
+#g4 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+ln.h1_scl| Census)+(1+Age_scl*ln.h1_scl|PlotCode), growth)
+#g5 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+Age_scl*ln.h1_scl| Census)+(1+ln.h1_scl|PlotCode), growth)
+g6 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+ln.h1_scl| Census)+(1+ln.h1_scl|PlotCode), growth)
+g7 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+ln.h1_scl| Census)+(1+Age_scl|PlotCode), growth)
+g8 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+Age_scl| Census)+(1+Age_scl|PlotCode), growth)
+g9 <- lmer(ln.h2_scl~ln.h1_scl*Age_scl+(1+Age_scl| Census)+(1+ln.h1_scl|PlotCode), growth)
+
+"""
+> aictab(list(g6,g7,g8,g9))
+
+Model selection based on AICc:
+
+      K    AICc Delta_AICc AICcWt Cum.Wt   Res.LL
+Mod2 11 8795.44       0.00   0.54   0.54 -4386.70
+Mod1 11 8795.74       0.29   0.46   1.00 -4386.85
+Mod4 11 8855.24      59.79   0.00   1.00 -4416.60
+Mod3 11 8855.28      59.84   0.00   1.00 -4416.62
+
+Warning messages:
+1: In aictab.AIClmerMod(list(g6, g7, g8, g9)) : 
+Model names have been supplied automatically in the table
+
+2: In aictab.AIClmerMod(list(g6, g7, g8, g9)) : 
+Model selection for fixed effects is only appropriate with ML estimation:
+REML (default) should only be used to select random effects for a constant set of fixed effects
+
+"""

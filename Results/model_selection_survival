@@ -1,0 +1,28 @@
+#s1 <- glmer(sup~ln.h1_scl*Age_scl+(1+Age_scl*ln.h1_scl| Census)+(1+Age_scl*ln.h1_scl|PlotCode), survival, binomial)
+#s2 <- glmer(sup~ln.h1_scl*Age_scl+(1+Age_scl+ln.h1_scl| Census)+(1+Age_scl*ln.h1_scl|PlotCode), survival, binomial)
+#s3 <- glmer(sup~ln.h1_scl*Age_scl+(1+Age_scl*ln.h1_scl| Census)+(1+Age_scl+ln.h1_scl|PlotCode), survival, binomial)
+#s4 <- glmer(sup~ln.h1_scl*Age_scl+(0+Age_scl+ln.h1_scl|Census)+(1+Age_scl*ln.h1_scl|PlotCode), survival, binomial)
+#s5 <- glmer(sup~ln.h1_scl*Age_scl+(1+Age_scl+ln.h1_scl| Census)+(1+Age_scl+ln.h1_scl|PlotCode), survival, binomial)
+#s6 <- glmer(sup~ln.h1_scl*Age_scl+(1+Age_scl*ln.h1_scl| Census)+(0+Age_scl+ln.h1_scl|PlotCode), survival, binomial)
+s7 <- glmer(sup~ln.h1_scl*Age_scl+(0+ln.h1_scl|Census)+(1+Age_scl|PlotCode), survival, binomial)
+s7.1 <- glmer(sup~ln.h1_scl*Age_scl+(0+Age_scl|Census)+(1+Age_scl|PlotCode), survival, binomial)
+s7.2 <- glmer(sup~ln.h1_scl*Age_scl+(1|Census)+(1+Age_scl|PlotCode), survival, binomial)
+s7.3 <- glmer(sup~ln.h1_scl*Age_scl+(Age_scl:ln.h1_scl|Census)+(1+Age_scl|PlotCode), survival, binomial)
+
+
+"""
+
+
+"""
+
+		census				plot				
+		i	h	a	ha	i	h	a	ha	total
+s1	no	13	13	13	13	16	16	16	16	120
+s2	no	0	13	13	13	16	16	16	16	107
+s3	no	13	13	13	13	0	16	16	16	104
+s4	no	0	0	13	13	16	16	16	16	94
+s5	no	0	13	13	13	0	16	16	16	91
+s6	no	13	13	13	13	0	0	16	16	88
+s7	no	0	0	0	13	16	16	16	16	77
+s8		0	0	13	13	0	0	16	16	77
+
