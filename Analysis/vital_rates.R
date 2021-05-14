@@ -1,7 +1,7 @@
 # Population dynamics of Mimosa acantholoba
 #
 # load requiered libraries:
-# install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'lme4', 'mgcv', reshape2', 'gridExtra', 'plot3D', 'fields'))
+#install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'lme4', 'mgcv', 'reshape2', 'gridExtra', 'plot3D', 'fields'))
 library(AICcmodavg)
 library(betareg)
 library(EnvStats)
