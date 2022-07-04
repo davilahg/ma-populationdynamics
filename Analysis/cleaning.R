@@ -5,14 +5,14 @@
     Age.mature <- 100 # mature forest age
     M <- 20000 # big-matrix dimension
     raw_canopy_data <- read.csv("./Data/raw_data/raw_canopy.csv")
+    raw_canopy_data$UID <- as.factor(as.character(raw_canopy_data$UID))
     raw_canopy_data <- raw_canopy_data[which(raw_canopy_data$Species == "Mimosa acantholoba"), ]
     isa.rows <- which(raw_canopy_data$Plot != "ISA") # removing data from ISA and ISX, age is unknown
     isx.rows <- which(raw_canopy_data$Plot != "ISX")
     raw_canopy_data <- raw_canopy_data[isa.rows,]
     raw_canopy_data <- raw_canopy_data[isx.rows,]
     raw_canopy_data <- droplevels(raw_canopy_data)
-    raw_canopy_data <- raw_canopy_data[!is.na(raw_canopy_data$Plot),]
-    #raw_canopy_data$Height <- as.numeric(as.character(raw_canopy_data$Height))
+    raw_canopy_data <- raw_canopy_data[!is.na(raw_canopy_data$UID),]
     raw_canopy_data <- transform(raw_canopy_data, Age_init = 0, Fst_cens = 2003)
     for (i in 1:nrow(raw_canopy_data)) {
         if (raw_canopy_data$Plot[i] == "DIV") {raw_canopy_data$Fst_cens[i] <- 2005}
@@ -42,12 +42,9 @@
 	 	 raw_canopy_data$Age[k] <- Age.mature
 	 }
  }
-}
-
-## creating new useful variables
-{
+ #
  raw_canopy_data <- transform(raw_canopy_data, sup = rep(NA, nrow(raw_canopy_data)), h1 = rep(NA, nrow(raw_canopy_data)), h2 = rep(NA, nrow(raw_canopy_data)))
- raw_canopy_data$Sup[is.na(raw_canopy_data$Sup)] <- 0 ## !!! debería excluírlos o ponerles 0?
+ raw_canopy_data$Sup[is.na(raw_canopy_data$Sup)] <- 0
  new_canopy_data <- as.data.frame(matrix(NA, nrow = 0, ncol = ncol(raw_canopy_data)))
  names(new_canopy_data) <- names(raw_canopy_data)
  for (i in levels(raw_canopy_data$UID)) {
@@ -55,7 +52,7 @@
  	if (nrow(new_canopy_data.i) > 1) {
  		new_canopy_data.i <- new_canopy_data.i[order(new_canopy_data.i$Census), ]
  		flag <- 1             
- 		for (j in 1:nrow(new_canopy_data.i)) { ### arreglar los que reviven manualmente
+ 		for (j in 1:nrow(new_canopy_data.i)) {
  			if (new_canopy_data.i$Sup[j] == 0) { # Remove data following a registered 0 in survival. Sometimes there are trees wich are still being registered after death, resulting in more 0's than real and overestimating death probability
                 #if (flag == 1)
                     #flag <- 0
@@ -77,14 +74,45 @@
    }
   }
  new_canopy_data <- transform(new_canopy_data, ln.h1 = log(h1), ln.h2 = log(h2), Age = Age)
- used_vars <- names(new_canopy_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "PlotCode", "sup", "UID", "Census")])
+ used_vars <- names(new_canopy_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "PlotCode", "sup", "UID", "Census", "maxDBH")])
  canopy <- new_canopy_data[ ,used_vars]
  #write.table(canopy, file = "./Data/cleaned_data/canopy.csv", sep = ",", row.names = FALSE)
 }
 
+# additional mature forest data
+{
+    mature_data <- read.csv('./Data/raw_data/mature_data.csv')
+    mature_data$UID <- as.factor(as.character(mature_data$UID))
+    mature_data$Height <- as.numeric(mature_data$Height)
+    mature_data <- transform(mature_data, Age = 100, sup = rep(NA, nrow(mature_data)), h1 = rep(NA, nrow(mature_data)), h2 = rep(NA, nrow(mature_data)))
+    mature_data$Sup[is.na(mature_data$Sup)] <- 0
+    new_mature_data <- as.data.frame(matrix(NA, nrow = 0, ncol = ncol(mature_data)))
+    names(new_mature_data) <- names(mature_data)
+    for (i in levels(mature_data$UID)) {
+        new_mature_data.i <- subset(mature_data, UID == i)
+        if (nrow(new_mature_data.i) > 1) {
+            new_mature_data.i <- new_mature_data.i[order(new_mature_data.i$Census), ]
+            for (j in 1:nrow(new_mature_data.i)) {
+                if (new_mature_data.i$Sup[j] == 0) {
+                    new_mature_data.i <- new_mature_data.i[1:j, ]
+                    break
+                }
+            }
+            new_mature_data.i$sup[1:nrow(new_mature_data.i)] <- new_mature_data.i$Sup[1:nrow(new_mature_data.i)]
+            new_mature_data.i$h1[2:nrow(new_mature_data.i)] <- new_mature_data.i$Height[1:(nrow(new_mature_data.i))-1]
+            new_mature_data.i$h2[1:nrow(new_mature_data.i)] <- new_mature_data.i$Height[1:nrow(new_mature_data.i)]
+            new_mature_data <- rbind(new_mature_data, new_mature_data.i)
+        }
+    }
+    new_mature_data <- transform(new_mature_data, ln.h1 = log(h1), ln.h2 = log(h2), Age = Age)
+    used_vars <- names(new_mature_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "PlotCode", "sup", "UID", "Census", "maxDBH")])
+    mature <- new_mature_data[ , used_vars]
+    #write.table(mature, file = './Data/cleaned_data/mature.csv', sep = ",", row.names = FALSE)
+}
+
 # understory
 {
- understory <- read.csv("./Data/raw_data/understory.csv")
+ understory <- read.csv("./Data/raw_data/raw_understory.csv")
  understory$Plot <- as.factor(as.character(understory$Plot))
  understory <- transform(understory, h1 = rep(NA, nrow(understory)), sup = rep(NA, nrow(understory)), h2 = rep(NA, nrow(understory)), Age = Ecenso, PlotCode = Plot, Census = Año)
  #understory <- understory[ ,used_vars]
@@ -93,6 +121,7 @@
  names(new_understory_data) <- names(understory)
  for (i in 1:nrow(understory))
     if (understory$Supv[i] == "Dosel") {understory$Supv[i] <- 1}
+ understory$UID <- as.factor(as.character(understory$UID))
  understory <- droplevels(understory)
  for (i in levels(understory$UID)) {
     understory.i <- subset(understory, UID == i)
@@ -111,10 +140,10 @@
         }
     }
  }
- new_understory_data <- transform(new_understory_data, ln.h1 = log(h1), ln.h2 = log(h2))
+ new_understory_data <- transform(new_understory_data, ln.h1 = log(h1), ln.h2 = log(h2), maxDBH = DB.max)
  understory <- new_understory_data[ ,used_vars]
  #write.table(understory, file = "./Data/cleaned_data/understory.csv", sep = ",", row.names = FALSE)
- complete_data <- rbind(canopy, understory)
+ complete_data <- rbind(canopy, understory, mature)
  #write.table(complete_data, file = "./Data/cleaned_data/complete_data.csv", sep = ",", row.names = FALSE)
 }
 
