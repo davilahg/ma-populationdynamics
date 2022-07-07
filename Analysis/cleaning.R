@@ -42,6 +42,7 @@
 	 	 raw_canopy_data$Age[k] <- Age.mature
 	 }
  }
+ ##write.table(raw_canopy_data, file = './Data/cleaned_data/raw_canopy_with_age.csv', sep = ',', row.names = FALSE)
  #
  raw_canopy_data <- transform(raw_canopy_data, sup = rep(NA, nrow(raw_canopy_data)), h1 = rep(NA, nrow(raw_canopy_data)), h2 = rep(NA, nrow(raw_canopy_data)))
  raw_canopy_data$Sup[is.na(raw_canopy_data$Sup)] <- 0
@@ -76,7 +77,7 @@
  new_canopy_data <- transform(new_canopy_data, ln.h1 = log(h1), ln.h2 = log(h2), Age = Age)
  used_vars <- names(new_canopy_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "PlotCode", "sup", "UID", "Census", "maxDBH")])
  canopy <- new_canopy_data[ ,used_vars]
- #write.table(canopy, file = "./Data/cleaned_data/canopy.csv", sep = ",", row.names = FALSE)
+ ##write.table(canopy, file = "./Data/cleaned_data/canopy.csv", sep = ",", row.names = FALSE)
 }
 
 # additional mature forest data
@@ -107,7 +108,7 @@
     new_mature_data <- transform(new_mature_data, ln.h1 = log(h1), ln.h2 = log(h2), Age = Age)
     used_vars <- names(new_mature_data[c("Age", "ln.h1", "ln.h2", "h1", "h2", "PlotCode", "sup", "UID", "Census", "maxDBH")])
     mature <- new_mature_data[ , used_vars]
-    #write.table(mature, file = './Data/cleaned_data/mature.csv', sep = ",", row.names = FALSE)
+    ##write.table(mature, file = './Data/cleaned_data/mature.csv', sep = ",", row.names = FALSE)
 }
 
 # understory
@@ -142,9 +143,9 @@
  }
  new_understory_data <- transform(new_understory_data, ln.h1 = log(h1), ln.h2 = log(h2), maxDBH = DB.max)
  understory <- new_understory_data[ ,used_vars]
- #write.table(understory, file = "./Data/cleaned_data/understory.csv", sep = ",", row.names = FALSE)
+ ##write.table(understory, file = "./Data/cleaned_data/understory.csv", sep = ",", row.names = FALSE)
  complete_data <- rbind(canopy, understory, mature)
- #write.table(complete_data, file = "./Data/cleaned_data/complete_data.csv", sep = ",", row.names = FALSE)
+ ##write.table(complete_data, file = "./Data/cleaned_data/complete_data.csv", sep = ",", row.names = FALSE)
 }
 
 

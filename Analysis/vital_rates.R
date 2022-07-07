@@ -3,6 +3,7 @@
 try(setwd("/Volumes/GoogleDrive/Mi\ unidad/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila"), silent = TRUE)
 try(setwd("/Volumes/GoogleDrive/My\ Drive/Edgar/Trabajo/FC/Dirección\ de\ tesis/L\ 2017\ Gerardo\ Dávila"), silent = TRUE)
 try(setwd('Insync/davilahg@ciencias.unam.mx/Google Drive/L 2017 Gerardo Dávila/'), silent = TRUE)
+try(setwd('/home/gerardo/ma-populationdynamics'), silent = TRUE)
 # load requiered libraries:
 #install.packages(c('AICcmodavg', 'betareg', 'EnvStats', 'gamm4', 'ggplot2', 'mgcv', 'lme4', 'mgcv', 'reshape2', 'gridExtra', 'plot3D', 'fields'))
 library(AICcmodavg)
@@ -265,20 +266,6 @@ plotsperage <- as.data.frame(table(tot.p.ages))
 spr.ppa <- plotsperage[which(plotsperage$tot.p.ages %in% nsprouts$Age),]$Freq
 nsprouts <- transform(nsprouts, ppa = spr.ppa)
 nsprouts <- transform(nsprouts, nscaled = n/ppa)
-
-f6.gam <- gam(nscaled~s(Age, bs = 'cs'), data = nsprouts, family = gaussian(log))
-g6.gam.gamma <- gam(nscaled~s(Age, bs = 'cs'), data = nsprouts, family = Gamma)
-f6.gam.predict <- predict(f6.gam, newdata = data.frame(Age = Age.pred), type = 'response')
-
-##
-spar <- c(1,0.75, 0.5, 0.25, 0.1, 0)
-par(mfrow = c(2,3))
-for (s in spar) {
-    f6.spline <- smooth.spline(nsprouts$Age, log(nsprouts$nscaled), spar = s) # f6
-    f6.pred <- exp(predict(f6.spline, x = Age.pred)$y)
-    plot(nsprouts$Age, nsprouts$nscaled, xlim = c(0,100), ylim = c(0,183))
-    lines(Age.pred, f6.pred)
-}
 f6.spline <- smooth.spline(nsprouts$Age, log(nsprouts$nscaled), spar = 0) # f6
 f6.pred <- exp(predict(f6.spline, x = Age.pred)$y)
 f6.line.df <- data.frame(Age = Age.pred, Nsprouts = f6.pred)
@@ -422,9 +409,11 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
   #pdf('lambda.pdf')
   plot(Age.pred, log(lam.list), type = 'l')
   abline(0,0)
+}
+# Size structure change
+{
   hist3D(x = x.pred, y = c(Age.pred,101), str.size, xlab = 'height', ylab = 'succesional age', zlab = 'denisty')
 		image(z = str.size)
-	
 	# ARREGLAR
 	{
 	str.size.df <- na.omit(melt(str.size))
@@ -452,12 +441,19 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
 	}
 	#
 	#dev.off()
-  ## lambda by plot
-  canopy_data <- read.csv('./Data/cleaned_data/canopy.csv')
-  canopy_data <- subset(canopy_data, !is.na(h1) & sup == 1) 
+}
+# lambda by plot
+{
+  canopy_data <- read.csv('./Data/cleaned_data/raw_canopy_with_age.csv')
+  canopy_data <- transform(canopy_data, h1 = Height, sup = as.factor(as.character(Sup)))
+  canopy_data <- subset(canopy_data, !is.na(h1) & sup == 1 & PlotCode != '') 
   understory_data <- read.csv("./Data/raw_data/raw_understory.csv")
+  understory_data <- transform(understory_data, h1 = Altura, sup = as.factor(as.character(Supv)), PlotCode = rep(NA, nrow(understory_data)), Age = Ecenso)
+  canopy_data <- droplevels(canopy_data)
+  understory_data <- droplevels(understory_data)  
   understory_data <- subset(understory_data, !is.na(h1) & sup == 1)
-  understory_data$PlotCode <- as.character(understory_data$PlotCode) # unifying plot coding
+  # unifying plot coding between canopy and understory data
+  understory_data$PlotCode <- as.character(understory_data$Plot)
   for (c in 1:length(understory_data$PlotCode)) {
     if (nchar(understory_data$PlotCode[c]) == 1) {
       understory_data$PlotCode[c] <- paste0("SC0", understory_data$PlotCode[c])
@@ -482,7 +478,22 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
     lam.can <- rbind(lam.can, can.p.a.df)
   }  
   #
-
+  for (p in levels(understory_data$PlotCode)) { # getting observed UNDERSTORY N and lambda by plot by year
+    und.p <- subset(understory_data, PlotCode == p)
+    und.p.a.n.list <- c()
+    for (a in sort(unique(und.p$Age))) {
+      und.p.a <- subset(und.p, Age == a)
+	  und.p.und <- length(which(und.p.a$DB.max < 1))*area_scale
+	  und.p.1 <- length(which(und.p.a$DB.max >= 1 & und.p.a$DB.max < 2.5))*4
+	  und.p.2.5 <- length(which(und.p.a$DB.max >= 2.5 & und.p.a$DB.max < 5))*2
+	  und.p.5 <- length(which(und.p.a$DB.max >= 5))
+	  und.p.a.n <- und.p.und + und.p.1 + und.p.2.5 + und.p.5 
+      und.p.a.n.list <- c(und.p.a.n.list, und.p.a.n)
+      }
+    und.p.a.l.list <- c(NA, und.p.a.n.list[2:length(und.p.a.n.list)]/und.p.a.n.list[1:(length(und.p.a.n.list)-1)])
+    und.p.a.df <- data.frame(PlotCode = rep(und.p$PlotCode[1], length(und.p.a.l.list)), Age = sort(unique(und.p$Age)), n = und.p.a.n.list, lambda = und.p.a.l.list)
+    lam.und <- rbind(lam.und, und.p.a.df)
+  }
   tot_lam_rows <- which(levels(lam.can$PlotCode) %in% levels(lam.und$PlotCode)) # which plots have data both from understory and from canopy (lam.tot)
   tot_lam_plt <- levels(lam.can$PlotCode)[tot_lam_rows]
   lam.tot <- as.data.frame(matrix(NA, 0, 4))
@@ -526,7 +537,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
   pop_growth_rate.df.g1 <- subset(pop_growth_rate.df, Age <= max.age)
   pop_growth_rate.df.l1 <- subset(pop_growth_rate.df, Age > max.age)
   #
-  lam.p.plot <- ggplot(data = na.omit(pop_growth_rate.df.g1))+#, #aes(x = Age, y = lambda, group = source)) +
+  lam.p.plot <- ggplot(data = na.omit(pop_growth_rate.df.g1))+##, #aes(x = Age, y = lambda, group = source)) +
                 theme_minimal() +
                 coord_cartesian(xlim = c(0,m)) +
                 scale_y_continuous(trans = "log10") +
@@ -545,9 +556,6 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
                 geom_line(aes(x = Age, y = lambda), size = 1.2)
 
   lam.p.plot
-  #
-  multplot <- ggarrange(lam.p.plot, str.size.plot, nrow = 2)
-  multplot
   #
   N.p.plot <- ggplot(data = pop_growth_rate.df.g1)+##, #aes(x = Age, y = n, group = source)) +
                 theme_minimal() +
