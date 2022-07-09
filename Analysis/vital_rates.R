@@ -470,7 +470,11 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
     can.p.a.n.list <- c()
     for (a in sort(unique(can.p$Age))) {
       can.p.a <- subset(can.p, Age == a)
-      can.p.a.n <- nrow(can.p.a)
+      can.p.can <- length(which(can.p.a$maxDBH < 1))*area_scale
+	  can.p.1 <- length(which(can.p.a$maxDBH >= 1 & can.p.a$maxDBH < 2.5))*4
+	  can.p.2.5 <- length(which(can.p.a$maxDBH >= 2.5 & can.p.a$maxDBH < 5))*2
+	  can.p.5 <- length(which(can.p.a$maxDBH >= 5))
+	  can.p.a.n <- can.p.can + can.p.1 + can.p.2.5 + can.p.5 
       can.p.a.n.list <- c(can.p.a.n.list, can.p.a.n)
       }
     can.p.a.l.list <- c(NA, can.p.a.n.list[2:length(can.p.a.n.list)]/can.p.a.n.list[1:(length(can.p.a.n.list)-1)])
@@ -483,11 +487,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
     und.p.a.n.list <- c()
     for (a in sort(unique(und.p$Age))) {
       und.p.a <- subset(und.p, Age == a)
-	  und.p.und <- length(which(und.p.a$DB.max < 1))*area_scale
-	  und.p.1 <- length(which(und.p.a$DB.max >= 1 & und.p.a$DB.max < 2.5))*4
-	  und.p.2.5 <- length(which(und.p.a$DB.max >= 2.5 & und.p.a$DB.max < 5))*2
-	  und.p.5 <- length(which(und.p.a$DB.max >= 5))
-	  und.p.a.n <- und.p.und + und.p.1 + und.p.2.5 + und.p.5 
+      und.p.a.n <- nrow(und.p.a)*area_scale
       und.p.a.n.list <- c(und.p.a.n.list, und.p.a.n)
       }
     und.p.a.l.list <- c(NA, und.p.a.n.list[2:length(und.p.a.n.list)]/und.p.a.n.list[1:(length(und.p.a.n.list)-1)])
@@ -560,6 +560,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
   N.p.plot <- ggplot(data = pop_growth_rate.df.g1)+##, #aes(x = Age, y = n, group = source)) +
                 theme_minimal() +
                 coord_cartesian(xlim = c(0,m)) +
+                scale_x_continuous(n.breaks = 10) +
                 scale_y_continuous(trans = "log10") +
                 labs(x = 'Succesional age (years)', y = 'Population size per plot') +
                 ##geom_line(data = na.omit(only.can.lam.can), aes(x = Age, y = n, colour = PlotCode), linetype = 'dashed') +
