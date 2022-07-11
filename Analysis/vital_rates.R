@@ -84,6 +84,7 @@ library(ggnewscale)
  max.lh1 <- max(survival$ln.h1, na.rm = TRUE)+0.0001
  max.lh2 <- max(survival$ln.h2, na.rm = TRUE)+0.0001
  E.pred <- seq(min(min.lh1, min.lh2), max(max.lh1, max.lh2), length.out = M+1)
+ h.pred <- seq(min(survival$h1, na.rm = TRUE), max(survival$h1, na.rm = TRUE), length.out = m)
  h <- E.pred[2]-E.pred[1]
  X.pred <- (E.pred[2:(M+1)]+E.pred[1:M])/2
  t1.pred <- rep(0, length.out = M)
@@ -412,35 +413,24 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
 }
 # Size structure change
 {
-  hist3D(x = x.pred, y = c(Age.pred,101), str.size, xlab = 'height', ylab = 'succesional age', zlab = 'denisty')
-		image(z = str.size)
-	# ARREGLAR
-	{
-	str.size.df <- na.omit(melt(str.size))
-	str.size.df <- str.size.df[order(str.size.df$Var1), ]
-	colnames(str.size.df) <- c("Height", "Age", "Density")
-	str.size.df <- subset(str.size.df, Age <= max.age)
-	#index <- str.size.df$Height
-	#for (i in 1:length(index)) {
-	#  str.size.df$Height[i] <- exp(x.pred)[index[i]]
-	str.size.df.1 <- data.frame(matrix(ncol=3,nrow=m*m))
-	names(str.size.df.1) <- c('Age', 'Height', 'Density')
-	for (a in Age.pred) {
-	  str.size.a <- str.size[,a]
-	  str.size.df.1[(a-1)*m+1:m, ] <- cbind(rep(a, m), exp(x.pred), str.size.a)
+	str.size.ggdf <- as.data.frame(matrix(ncol = 3, nrow = m*Age.mature))
+	names(str.size.ggdf) <- c('Age', 'Size', 'Density')
+	for (a in 1:Age.mature) {
+        str.size.ggdf$Age[((a-1)*Age.mature+1):(Age.mature*a)] <- rep(a, m)
+        str.size.ggdf$Size[((a-1)*Age.mature+1):(Age.mature*a)] <- h.pred
+        str.size.ggdf$Density[((a-1)*Age.mature+1):(Age.mature*a)] <- str.size[,a]
 	}
-	str.size.plot <- ggplot(str.size.df.1) +
+	str.size.df <- subset(str.size.ggdf, Age <= max.age)
+	str.size.plot <- ggplot(str.size.df, aes(x = Age, y = Size)) +
 	                  theme_minimal()+
-	                  geom_raster(aes(x = Age, y = Height, fill = Density))+
+	                  coord_cartesian(xlim = c(1, max.age), ylim = c(min(h.pred), max(h.pred))) +
+	                  geom_raster(aes(fill = Density)) +
 	                  scale_fill_gradientn(colours = hcl.colors(12, "YlOrRd"))+
-	                  geom_contour(aes(Age, Height, z = Density), color = 'black') +
-	                  geom_label_contour(aes(Age, Height, z = Density)) +
-	                  labs(x = 'Successional age', y = 'Height')
+	                  geom_contour(aes(Age, Size, z = Density), color = 'black') +
+	                  geom_label_contour(aes(Age, Size, z = Density)) +
+	                  labs(x = 'Successional age (years)', y = 'Height (m)')
 	  
 	str.size.plot
-	}
-	#
-	#dev.off()
 }
 # lambda by plot
 {
