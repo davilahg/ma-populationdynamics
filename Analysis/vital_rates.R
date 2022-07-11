@@ -550,7 +550,6 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
   N.p.plot <- ggplot(data = pop_growth_rate.df.g1)+##, #aes(x = Age, y = n, group = source)) +
                 theme_minimal() +
                 coord_cartesian(xlim = c(0,m)) +
-                scale_x_continuous(n.breaks = 10) +
                 scale_y_continuous(trans = "log10") +
                 labs(x = 'Succesional age (years)', y = 'Population size per plot') +
                 ##geom_line(data = na.omit(only.can.lam.can), aes(x = Age, y = n, colour = PlotCode), linetype = 'dashed') +
@@ -565,6 +564,12 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
                 ##geom_line(data = na.omit(pop_growth_rate.df.l1), aes(x = Age, y = N), size = 1, linetype = 'dotted') +
                 geom_line(aes(x = Age, y = N), size = 1.2)
   N.p.plot
+  # Multiplot
+  multiplot.pop <- ggarrange(N.p.plot, lam.p.plot, str.size.plot,
+                    ncol = 3, nrow = 1, labels = "AUTO")
+  multiplot.pop
+  #ggsave(multiplot.pop, file = 'plot_pop_panel.pdf', height=4, width=12, units="in")
+
 } 
 # vital rates plots
 #load('./Data/r_data/plots.RData')
@@ -843,7 +848,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
         f123 <- f1.pred*f2.pred*f3.pred
         plot.data.f123[(a-1)*m+1:m, ] <- cbind(rep(a, m), h1.pred.f, f123)
     }
-    f123.cont.seq <- seq(100, 1, by = 100)
+    f123.cont.seq <- c(10,20,30,40,50,100,150,200,250,300,350,400)
     f123.plot <- ggplot(plot.data.f123) + ## 1
         theme_minimal() +
         #theme(legend.position="none") +
@@ -856,9 +861,9 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
         scale_alpha(guide = "none") +
         geom_raster(aes(Age.pred, h1.pred, fill = f123.pred)) +
         scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
-        geom_contour(aes(Age.pred, h1.pred, z = f123.pred), breaks = c(f123.cont.seq, 50), color = 'black') +
-        geom_label_contour(aes(Age.pred, h1.pred, z = f123.pred), breaks = c(f123.cont.seq, 50)) +
         geom_point(data = data.rep, aes(Age, h1, fill = totalseeds), color = 'black', shape = 21, size = 3) +
+        geom_contour(aes(Age.pred, h1.pred, z = f123.pred), breaks = f123.cont.seq, color = 'black') +
+        geom_label_contour(aes(Age.pred, h1.pred, z = f123.pred), breaks = f123.cont.seq) +
         scale_fill_gradient(low = "#d90000", high = "#fcdf03") 
         #new_scale_fill() +
         #geom_point(data = f2.rep.data, aes(Age, h1, fill = TotalFruitset), size = 2, shape = 22, color = 'black') +
@@ -920,6 +925,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
                     ncol = 2, nrow = 3, labels = "AUTO")
   multiplot
   ggsave(multiplot, file = 'plot_panel.pdf', height=10, width=8, units="in")
+  ##
 }
 
 
