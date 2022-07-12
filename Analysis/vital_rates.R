@@ -528,7 +528,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
   pop_growth_rate.df.l1 <- subset(pop_growth_rate.df, Age > max.age)
   #
   lam.p.plot <- ggplot(data = na.omit(pop_growth_rate.df.g1))+##, #aes(x = Age, y = lambda, group = source)) +
-                theme_minimal() +
+                theme_classic() +
                 coord_cartesian(xlim = c(0,m)) +
                 scale_y_continuous(trans = "log10") +
                 labs(x = 'Succesional age (years)', y = 'Population growth rate') +
@@ -543,12 +543,13 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
                 ##geom_point(data = na.omit(lam.tot), aes(x = Age, y = lambda), shape = 16, color = "blue") +
                 geom_point(aes(x=100, y=1), color = 'blue', shape = 21) +
                 geom_line(data = na.omit(pop_growth_rate.df.l1), aes(x = Age, y = lambda), size = 1, linetype = 'dotted') +
+                geom_abline(intercept = 0, slope = 0) +
                 geom_line(aes(x = Age, y = lambda), size = 1.2)
 
   lam.p.plot
   #
   N.p.plot <- ggplot(data = pop_growth_rate.df.g1)+##, #aes(x = Age, y = n, group = source)) +
-                theme_minimal() +
+                theme_classic() +
                 coord_cartesian(xlim = c(0,m)) +
                 scale_y_continuous(trans = "log10") +
                 labs(x = 'Succesional age (years)', y = 'Population size per plot') +
@@ -562,13 +563,15 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
                 ##geom_point(data = na.omit(lam.tot), aes(x = Age, y = n, colour = PlotCode), shape = 16) +
                 ##geom_point(data = na.omit(lam.tot), aes(x = Age, y = n), shape = 16, color = "blue") +
                 ##geom_line(data = na.omit(pop_growth_rate.df.l1), aes(x = Age, y = N), size = 1, linetype = 'dotted') +
-                geom_line(aes(x = Age, y = N), size = 1.2)
+                geom_line(aes(x = Age, y = N), size = 1.2) +
+                geom_hline(yintercept = 1)
+
   N.p.plot
   # Multiplot
   multiplot.pop <- ggarrange(N.p.plot, lam.p.plot, str.size.plot,
                     ncol = 3, nrow = 1, labels = "AUTO")
   multiplot.pop
-  #ggsave(multiplot.pop, file = 'plot_pop_panel.pdf', height=4, width=12, units="in")
+  ggsave(multiplot.pop, file = 'plot_pop_panel_classic.pdf', height=4, width=12, units="in")
 
 } 
 # vital rates plots
