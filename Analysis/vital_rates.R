@@ -685,6 +685,7 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
           delta.g <- exp(g.m)-exp(x.pred)
     pred.g.mean[(a-1)*length(mids)+1:length(mids), ] <- cbind(rep(Age.pred[a], length(mids)), mids, delta.g)
    }
+   g.cont.seq <- c(0.40,0.30, 0.25, 0, -0.5, -1, -1.5, -2)
    # plot
    g.mean.plot <- ggplot(pred.g.mean) +
    theme_minimal() +
@@ -700,8 +701,8 @@ f57.df <- data.frame(height = c(recruits_h, sprouting$h1), group = as.factor(c(r
    scale_colour_gradient(low = "#d90000", high = "#fcdf03") +
    geom_point(data = na.omit(data.g.df), aes(age, h1, fill = gmean, size = n), shape = 21, color = 'black') +
    scale_size_area(breaks = c(1,5,10,20)) +
-   geom_contour(aes(age.pred, h1.pred, z = g.mean), color = 'black', binwidth = 0.1) +
-   geom_label_contour(aes(age.pred, h1.pred, z = g.mean), skip = 0) +
+   geom_contour(aes(age.pred, h1.pred, z = g.mean), breaks = g.cont.seq, color = 'black', binwidth = 0.1) +
+   geom_label_contour(aes(age.pred, h1.pred, z = g.mean), breaks = g.cont.seq) +
    guides(colour = guide_colourbar(title = "Average\ngrowth (m)", order = 1), size = guide_legend(title = "Sample\nsize", order = 2))
    #dev.new(width = 10, height = 8)
    g.mean.plot
